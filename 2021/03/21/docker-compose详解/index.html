@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+
+  
+  <title>docker-compose详解 | haochan&#39;s blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  
+  
+  <meta name="keywords" content="blog">
+  
+  <meta name="description" content="术语 服务：一个应用容器，实际上可以运行多个相同镜像的实例。 项目：由一组关联的应用容器组成一个完整业务单元    可见，一个项目可以由多个服务（容器）关联而成，compose面向项目进行管理 命令说明docker-compose [COMMAND] –help 或者 docker-compose help [COMMAND]可以具体查看某个命令的使用格式 命令选项  -f –file FILE指">
+<meta name="keywords" content="blog">
+<meta property="og:type" content="article">
+<meta property="og:title" content="docker-compose详解">
+<meta property="og:url" content="https://haochanc.github.io/2021/03/21/docker-compose详解/index.html">
+<meta property="og:site_name" content="haochan&#39;s blog">
+<meta property="og:description" content="术语 服务：一个应用容器，实际上可以运行多个相同镜像的实例。 项目：由一组关联的应用容器组成一个完整业务单元    可见，一个项目可以由多个服务（容器）关联而成，compose面向项目进行管理 命令说明docker-compose [COMMAND] –help 或者 docker-compose help [COMMAND]可以具体查看某个命令的使用格式 命令选项  -f –file FILE指">
+<meta property="og:locale" content="Chinese">
+<meta property="og:updated_time" content="2021-03-21T11:44:39.570Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="docker-compose详解">
+<meta name="twitter:description" content="术语 服务：一个应用容器，实际上可以运行多个相同镜像的实例。 项目：由一组关联的应用容器组成一个完整业务单元    可见，一个项目可以由多个服务（容器）关联而成，compose面向项目进行管理 命令说明docker-compose [COMMAND] –help 或者 docker-compose help [COMMAND]可以具体查看某个命令的使用格式 命令选项  -f –file FILE指">
+  
+    <link rel="alternate" href="/atom.xml" title="haochan&#39;s blog" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/images/kk.jpg">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/highlight.css">
+  <script>
+  let antiquityStorage = window.sessionStorage.getItem('antiquitySessionStorage');
+  if (antiquityStorage == '' || antiquityStorage == null) {
+    var antiquityLoader = '<div id="loaderbox"><div class="loader"><div class="load-roll"><div class="load-top"></div><div class="load-right"></div><div class="load-bottom"></div></div></div></div>';
+    document.write(antiquityLoader);
+    document.body.style.overflow = 'hidden'
+  }
+  </script>
+</head>
+</html>
+<body>
+  <div id="fullpage" class="mobile-nav-right">
+    
+      <div id="wrapper" style="background-image: url(/images/mm.jpeg)" title="图片来自网络">
+    
+    
+      <header id="header">
+  <div id="nav-toggle" class="nav-toggle"></div>
+  <div class="head-box global-width">
+    <nav class="nav-box nav-right">
+      
+        <a class="nav-item" href="/" title
+        
+        >首页</a>
+      
+        <a class="nav-item" href="/archives" title
+        
+        >归档</a>
+      
+    </nav>
+  </div>
+</header>
+      <div id="middlecontent" title class="global-width sidebar-right">
+        <section id="main"><article id="title-docker-compose详解" class="article global-container article-type-title" itemscope itemprop="blogPost">
+  
+    <header class="article-header">
+      
+  
+    <h1 class="article-title" itemprop="name">
+      docker-compose详解
+    </h1>
+  
+
+    </header>
+  
+  <div class="article-meta">
+    <a href="/2021/03/21/docker-compose详解/" class="article-date">
+  <time datetime="2021-03-21T11:44:11.000Z" itemprop="datePublished">2021-03-21</time>
+</a>
+    
+    
+  </div>
+  
+    <span id="busuanzi_container_page_pv">
+      本文总阅读量<span id="busuanzi_value_page_pv"></span>次
+    </span>
+  
+
+  <div class="article-inner">
+    
+    <div class="article-content article-content-cloud" itemprop="articleBody">
+      
+        <h5 id="术语"><a href="#术语" class="headerlink" title="术语"></a>术语</h5><ul>
+<li>服务：一个应用容器，实际上可以运行多个相同镜像的实例。</li>
+<li>项目：由一组关联的应用容器组成一个完整业务单元  </li>
+</ul>
+<p>可见，一个项目可以由多个服务（容器）关联而成，compose面向项目进行管理</p>
+<h5 id="命令说明"><a href="#命令说明" class="headerlink" title="命令说明"></a>命令说明</h5><p>docker-compose [COMMAND] –help 或者 docker-compose help [COMMAND]可以具体查看某个命令的使用格式</p>
+<p><em>命令选项</em></p>
+<ul>
+<li>-f –file FILE指定使用的compose模版文件，默认为docker-compose.yml</li>
+<li>-p –project-name NAME指定项目名称，默认将使用所在目录名称作为项目名</li>
+<li>–verbose 输出更多调试信息</li>
+<li>-v，–version 打印版本并退出</li>
+</ul>
+<p><em>build</em><br>格式为：docker-compose build [option] [SERICE…]<br>构建（重新构建）项目中的服务容器。服务容器一旦构建后，将会带上一个标记名，例如对于 web 项目中的一个 db 容器，可能是 web_db。<br>可以随时在项目目录下运行 docker-compose build 来重新构建服务。<br>选项包括：</p>
+<ul>
+<li>–force-rm 删除构建过程中的临时容器</li>
+<li>–no-cache 构建镜像过程中不使用cache</li>
+<li>–pull 始终尝试通过pull来获取更新版本的镜像<br><em>config</em><br>验证compose文件格式是否正确，若正确则显示配置，若错误显示错误原因  </li>
+<li>down*<br>此命令将会停止up命令所启动的容器，并移除网络  </li>
+<li>exec*<br>进入指定的容器  </li>
+<li>images*<br>列出compose文件中包含的镜像  </li>
+<li>kill*<br>格式为 docker-compose kill [option] [SERVICE…]<br>通过发送SIGKILL信号来强制停止服务容器。支持-s参数来指定发送的信号。  </li>
+<li>logs*<br>docker-compose logs [options] [SERVICE…]<br>查看服务器的输出。默认情况下，docker-compose将对不同的服务输出使用不同的颜色来区分。可以通过–no-color来关闭颜色。  </li>
+<li>pause*<br>格式为docker-compose pause [SERVICE…]暂停一个服务容器</li>
+<li>port*<br>格式为docker-compose port [options] SERVICE PRIVATE_PORT.<br>打印某个容器端口所映射的公共端口  </li>
+</ul>
+<p>–protocol=proto 指定端口协议，tcp（默认值）或者udp。<br>–index=index如果同一服务存在多个容器，指定命令对象容器的序号<br><em>ps</em><br>格式为docker-compose ps [option] [SERVICE…]列出项目中目前的所有容器  </p>
+<h5 id="YAML模版文件"><a href="#YAML模版文件" class="headerlink" title="YAML模版文件"></a>YAML模版文件</h5><h6 id="compose模板文件"><a href="#compose模板文件" class="headerlink" title="compose模板文件"></a>compose模板文件</h6><pre><code>    version: &quot;3&quot;
+services:
+  webapp:
+    image: examples/web
+    ports:
+      - &quot;80:80&quot;
+    volumes:
+      - &quot;/data&quot;</code></pre><p>注意每个服务都必须通过image指定镜像或build指令（需要dockerfile）等来自动构建生成镜像。<br>如果build指令，在Dockerfile中设置的选项（例如：CMD,EXPOSE,VOLUME,ENV等）将会自动获取，无需在docker-compose.yaml中再次设置。<br><em>build</em><br>指定Dockerfile所在文件夹路径（可以是绝对路径，或者相对docker-copose.yml文件的路径）。compose将会利用它自动构建这个镜像，然后使用这个镜像。</p>
+<pre><code>build： /path/to/build/dir</code></pre><p><em>cap_add,cap_drop</em><br>指定容器的内核能力(capacity)分配<br>例如，让容器拥有所有能力可以指定为：</p>
+<pre><code>  cap_add:
+- ALL</code></pre><p>去掉NET_ADMIN能力可以指定为：</p>
+<pre><code>  cap_drop:
+- NET_ADMIN</code></pre><p><em>command</em><br>覆盖容器启动后默认执行的命令</p>
+<pre><code>command: echo &quot;hello world&quot; </code></pre><p><em>cgroup_parent</em><br>指定父cgroup组，意味着将继承改组的资源限制。<br>例如，创建一个cgroup组名称为cgroup_1</p>
+<pre><code>cgroup_parent: cgroup_1</code></pre><p><em>container_name</em><br>指定容器名称。默认会使用<em>项目名称_服务名称_序号</em>这样的格式</p>
+<pre><code>container_name: docker-web-container</code></pre><p>需要注意，指定容器名称后，该服务将无法进行扩展，因为docker不允许多个容器具有相同的名称。<br><em>devices</em><br>指定设备映射关系</p>
+<pre><code>  devices:
+-&quot;/dev/ttyUSB1:/dev/ttyUSB0&quot;</code></pre><p><em>depens_on</em><br>解决容器的依赖、启动先后的问题。以下例子中先启动redis db再启动web</p>
+<pre><code>    version: &apos;3&apos;
+services:
+  web:
+    build: .
+    depends_on:
+      - db
+      - redis
+  redis:
+    image: redis
+  db:
+    image: postgres</code></pre><p><em>dns</em><br>自定义DNS服务器。可以是一个值，也可以是一个列表。</p>
+<pre><code>    dns: 8.8.8.8
+
+dns:
+  - 8.8.8.8
+  - 114.114.114.114</code></pre><p><em>dns_search</em><br>配置DNS搜索域，可以是一个值，也可以是一个列表。</p>
+<pre><code>    dns_search: example.com
+dns_search:
+  - domain1.example.com
+  - domain2.example.com</code></pre><p><em>tmpfs</em><br>挂载一个tmpfs文件系统到容器</p>
+<pre><code>    tmpfs: /run
+tmpfs:
+  - /run
+  - /tmp</code></pre><p><em>env_file</em><br>从文件中获取环境变量，可以为单独的文件路径或列表。如果通过docker-compose  -f FILE方式来指定compose模板文件，则env_file中变量的路径会给予模板文件路径。如果有变量名称与enviroment指令冲突，按照惯例，以后者为准。</p>
+<pre><code>    env_file: .env
+
+env_file:
+  - ./common.env
+  - ./apps/web.env
+  - /opt/secrets.env</code></pre><p><em>environment</em><br>设置环境变量。你可以使用数组或字典两种格式。</p>
+<pre><code>    environment：
+  RACK_ENV: development
+  SESSION_SECRET:
+
+environment：
+  - RACK_ENV=development
+  - SESSION_SECRET</code></pre><p><em>expose</em><br>暴露端口，但不映射到宿主机，只被连接的服务访问。仅可以指定内部端口为参数</p>
+<pre><code>  expose：
+- &quot;3000&quot;
+- &quot;8000&quot;</code></pre><p><em>extra_hosts</em><br>类似Docker中的–add-host参数，指定额外的host名称映射信息。</p>
+<pre><code>  extra_hosts:
+- &quot;googledns:8.8.8.8&quot;
+- &quot;dockerhub:52.1.157.61&quot;</code></pre><p><em>healthcheck</em><br>通过命令检查容器是否健康运行。</p>
+<pre><code>  healthcheck:
+test: [&quot;CMD&quot;,&quot;curl&quot;,&quot;-f&quot;,&quot;http://localhost&quot;]
+interval: 1m30s
+timeout: 10s
+retries: 3</code></pre><p><em>image</em><br>指定为镜像或镜像ID。如果镜像在本地不存在，compose将会尝试去拉去这个镜像</p>
+<pre><code>image: ubuntu</code></pre><p><em>labels</em><br>为容器添加Docker元数据（metadata）信息。例如可以为容器添加辅助说明信息</p>
+<pre><code>  lables：
+com.startupteam.description: &quot;webapp for a startup team&quot;</code></pre><p><em>logging</em><br>配置日志选项</p>
+<pre><code>  logging:
+driver: syslog
+options:
+  syslog-address: &quot;tcp://192.168.0.42:123&quot;</code></pre><p>目前支持三种日志驱动类型</p>
+<pre><code>    driver：&quot;json-file&quot;
+driver: &quot;syslog&quot;
+driver: &quot;none&quot;</code></pre><p>options配置日志驱动的相关参数</p>
+<pre><code>  options：
+max-size: &quot;200k&quot;
+max-file: &quot;10&quot;</code></pre><p><em>networks</em><br>配置容器连接的网络</p>
+<pre><code>    version: &quot;3&quot;
+services:
+  some-service:
+    networks:
+     - some-network
+     - other-network
+networks:
+  some-network:
+  other-network:</code></pre><p><em>pid</em><br>跟主机系统共享进程命名空间。打开该选项的容器之间，以及容器和 宿主机系统之间可以通过进程ID来相互访问和操作</p>
+<pre><code>pid：&quot;host&quot;</code></pre><p><em>ports</em><br>暴露端口信息。使用宿主：容器（HOST:CONTAINER）格式，或者仅仅指定容器的端口（宿主将会随机选择端口）都可以。</p>
+<pre><code>  ports:
+- &quot;3000&quot;
+- &quot;8000:8000&quot;
+- &quot;49100:22&quot;
+- &quot;127.0.0.1:8001:8001&quot;</code></pre><p><em>volumes</em><br>数据卷所挂载的路径设置。可以设置宿主路径（HOST:CONTAINER）或加上访问模式（HOST:CONTAINER:ro）<br>该指令中路径支持相对路径</p>
+<pre><code>  volumes:
+- /var/lib/mysql
+- cache/:/tmp/cache
+- ~/configs:/etc/configs/:ro</code></pre><p><em>entrypoint</em><br>指定服务器容器启动后执行的入口文件</p>
+<pre><code>entrypoint： /code/entrypoint.sh</code></pre><p>指定容器中运行应用的用户名</p>
+<pre><code>user: nginx</code></pre><p>指定容器中工作目录</p>
+<pre><code>working_dir: /code</code></pre><p>指定容器退出后的重启策略为始终重启。在生产环境中推荐配置为 always 或者 unless-stopped</p>
+<pre><code>restart: always</code></pre><p>读取环境变量，compose模板文件支持动态读取主机的系统环境变量</p>
+<pre><code>  db:
+image: &quot;mongo:${MONGO_VERSION}&quot;</code></pre>
+      
+    </div>
+    
+      <footer class="article-footer">
+        完
+      </footer>
+    
+  </div>
+  
+    
+<nav id="article-nav">
+  <div class="article-nav-block">
+    
+      <a href="/2021/03/21/DNS域名解析详解/" id="article-nav-newer" class="article-nav-link-wrap">
+        <strong class="article-nav-caption"></strong>
+        <div class="article-nav-title">
+          
+            DNS域名解析详解
+          
+        </div>
+      </a>
+    
+  </div>
+  <div class="article-nav-block">
+    
+      <a href="/2021/03/21/nginx安装与配置/" id="article-nav-older" class="article-nav-link-wrap">
+        <div class="article-nav-title">nginx安装与配置</div>
+        <strong class="article-nav-caption"></strong>
+      </a>
+    
+  </div>
+</nav>
+
+    
+<div id="gitmentContainer"></div>
+<link rel="stylesheet" href="https://imsun.github.io/gitment/style/default.css">
+<script src="https://imsun.github.io/gitment/dist/gitment.browser.js"></script>
+<script>
+var gitment = new Gitment({
+  owner: 'haochanc',
+  repo: 'haochanc.github.io',
+  oauth: {
+    client_id: 'ece3337c08ff6f853acc',
+    client_secret: '892b8fe3400f057ab9eb1f01f7983e9bd70426bc',
+  },
+})
+gitment.render('gitmentContainer')
+</script>
+
+
+  
+  
+</article>
+</section>
+        <aside id="sidebar">
+  
+    <div class="widget-box">
+  <div class="avatar-box">
+    <img class="avatar" src="/images/tx.jpeg" title="头像来自网络"></img>
+    <h3 class="avatar-name">
+      
+        好馋
+      
+    </h3>
+    <p class="avatar-slogan">
+      爱折腾的程序员
+    </p>
+  </div>
+</div>
+
+
+  
+    
+
+  
+    
+
+  
+    
+  
+    
+  <div class="widget-box">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/03/">March 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/07/">July 2019</a></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-box">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2021/03/21/RabbitMQ/">RabbitMQ</a>
+          </li>
+        
+          <li>
+            <a href="/2021/03/21/常见问题记录/">常见问题记录</a>
+          </li>
+        
+          <li>
+            <a href="/2021/03/21/iptables参数详解/">iptables参数详解</a>
+          </li>
+        
+          <li>
+            <a href="/2021/03/21/DNS域名解析详解/">DNS域名解析详解</a>
+          </li>
+        
+          <li>
+            <a href="/2021/03/21/docker-compose详解/">docker-compose详解</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+      <div class="widget-box">
+    <h3 class="widget-title">友链</h3>
+    <div class="widget">
+      
+        <a style="display: block;" href="https://github.com/haochanc/" title target='_blank'
+        >爱吃的小馋猫</a>
+      
+    </div>
+  </div>
+
+  
+</aside>
+      </div>
+      <footer id="footer">
+  <div class="foot-box global-width">
+    &copy; 2021 Chan Hao &nbsp;&nbsp;
+    Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    &nbsp;|&nbsp;主题 <a href="https://github.com/yiluyanxia/hexo-theme-antiquity">antiquity</a>
+    <br>
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  </div>
+
+      <script src="https://code.jquery.com/jquery-2.0.3.min.js"></script>
+<script>
+if (!window.jQuery) {
+var script = document.createElement('script');
+script.src = "/js/jquery-2.0.3.min.js";
+document.body.write(script);
+}
+</script>
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+
+
+    </div>
+    <nav id="mobile-nav" class="mobile-nav-box">
+  <div class="mobile-nav-img mobile-nav-top"></div>
+  
+    <a href="/" class="mobile-nav-link">首页</a>
+  
+    <a href="/archives" class="mobile-nav-link">归档</a>
+  
+  <div class="mobile-nav-img  mobile-nav-bottom"></div>
+</nav>    
+  </div>
+</body>
+</html>

@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+
+  
+  <title>nginx安装与配置 | haochan&#39;s blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  
+  
+  <meta name="keywords" content="blog">
+  
+  <meta name="description" content="nginx的安装  编译 yum安装 编写nginx的yum源  vim /etc/yum.repos.d/nginx.repo[nginx-stable]name=nginx stable repobaseurl=http://nginx.org/packages/centos/$releasever/$basearch/gpgcheck=1enabled=1gpgkey=https://ngi">
+<meta name="keywords" content="blog">
+<meta property="og:type" content="article">
+<meta property="og:title" content="nginx安装与配置">
+<meta property="og:url" content="https://haochanc.github.io/2021/03/21/nginx安装与配置/index.html">
+<meta property="og:site_name" content="haochan&#39;s blog">
+<meta property="og:description" content="nginx的安装  编译 yum安装 编写nginx的yum源  vim /etc/yum.repos.d/nginx.repo[nginx-stable]name=nginx stable repobaseurl=http://nginx.org/packages/centos/$releasever/$basearch/gpgcheck=1enabled=1gpgkey=https://ngi">
+<meta property="og:locale" content="Chinese">
+<meta property="og:updated_time" content="2021-03-21T11:42:29.462Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="nginx安装与配置">
+<meta name="twitter:description" content="nginx的安装  编译 yum安装 编写nginx的yum源  vim /etc/yum.repos.d/nginx.repo[nginx-stable]name=nginx stable repobaseurl=http://nginx.org/packages/centos/$releasever/$basearch/gpgcheck=1enabled=1gpgkey=https://ngi">
+  
+    <link rel="alternate" href="/atom.xml" title="haochan&#39;s blog" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/images/kk.jpg">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/highlight.css">
+  <script>
+  let antiquityStorage = window.sessionStorage.getItem('antiquitySessionStorage');
+  if (antiquityStorage == '' || antiquityStorage == null) {
+    var antiquityLoader = '<div id="loaderbox"><div class="loader"><div class="load-roll"><div class="load-top"></div><div class="load-right"></div><div class="load-bottom"></div></div></div></div>';
+    document.write(antiquityLoader);
+    document.body.style.overflow = 'hidden'
+  }
+  </script>
+</head>
+</html>
+<body>
+  <div id="fullpage" class="mobile-nav-right">
+    
+      <div id="wrapper" style="background-image: url(/images/mm.jpeg)" title="图片来自网络">
+    
+    
+      <header id="header">
+  <div id="nav-toggle" class="nav-toggle"></div>
+  <div class="head-box global-width">
+    <nav class="nav-box nav-right">
+      
+        <a class="nav-item" href="/" title
+        
+        >首页</a>
+      
+        <a class="nav-item" href="/archives" title
+        
+        >归档</a>
+      
+    </nav>
+  </div>
+</header>
+      <div id="middlecontent" title class="global-width sidebar-right">
+        <section id="main"><article id="title-nginx安装与配置" class="article global-container article-type-title" itemscope itemprop="blogPost">
+  
+    <header class="article-header">
+      
+  
+    <h1 class="article-title" itemprop="name">
+      nginx安装与配置
+    </h1>
+  
+
+    </header>
+  
+  <div class="article-meta">
+    <a href="/2021/03/21/nginx安装与配置/" class="article-date">
+  <time datetime="2021-03-21T11:40:38.000Z" itemprop="datePublished">2021-03-21</time>
+</a>
+    
+    
+  </div>
+  
+    <span id="busuanzi_container_page_pv">
+      本文总阅读量<span id="busuanzi_value_page_pv"></span>次
+    </span>
+  
+
+  <div class="article-inner">
+    
+    <div class="article-content article-content-cloud" itemprop="articleBody">
+      
+        <p>nginx的安装</p>
+<ol>
+<li>编译</li>
+<li>yum安装<br> 编写nginx的yum源<br>  vim /etc/yum.repos.d/nginx.repo<br>[nginx-stable]<br>name=nginx stable repo<br>baseurl=<a href="http://nginx.org/packages/centos/$releasever/$basearch/" target="_blank" rel="noopener">http://nginx.org/packages/centos/$releasever/$basearch/</a><br>gpgcheck=1<br>enabled=1<br>gpgkey=<a href="https://nginx.org/keys/nginx_signing.key" target="_blank" rel="noopener">https://nginx.org/keys/nginx_signing.key</a></li>
+</ol>
+<p>[nginx-mainline]<br>name=nginx mainline repo<br>baseurl=<a href="http://nginx.org/packages/mainline/centos/$releasever/$basearch/" target="_blank" rel="noopener">http://nginx.org/packages/mainline/centos/$releasever/$basearch/</a><br>gpgcheck=1<br>enabled=0<br>gpgkey=<a href="https://nginx.org/keys/nginx_signing.keyutil" target="_blank" rel="noopener">https://nginx.org/keys/nginx_signing.keyutil</a></p>
+<p>yum install yum-utils<br>yum install nginx</p>
+<p>nginx的配置文件<br>/etc/nginx/nginx.conf</p>
+<p>user  nginx;   #运行用户，默认为nginx<br>worker_processes  1;     #nginx的进程数</p>
+<p>error_log  /var/log/nginx/error.log warn;  #错误日志存放的位置<br>pid        /var/run/nginx.pid;  #进程pid存放的位置</p>
+<p>events {<br>    worker_connections  1024;   #单个后台进程的最大并发连接数<br>}</p>
+<p>http {<br>    include       /etc/nginx/mime.types;  #文件扩展名与类型映射表<br>    default_type  application/octet-stream;   #默认文件类型</p>
+<pre><code>log_format  main  &apos;$remote_addr - $remote_user [$time_local] &quot;$request&quot; &apos;
+                  &apos;$status $body_bytes_sent &quot;$http_referer&quot; &apos;
+                  &apos;&quot;$http_user_agent&quot; &quot;$http_x_forwarded_for&quot;&apos;;
+
+access_log  /var/log/nginx/access.log  main;  #nginx的访问日志
+
+sendfile        on;     #开启高效传输模式
+#tcp_nopush     on;
+
+keepalive_timeout  65;  #连接超时时间，单位秒
+
+#gzip  on;   #开启gzip压缩功能
+
+include /etc/nginx/conf.d/*.conf;</code></pre><p>}</p>
+<p>server {<br>    listen       80;   #监听端口<br>    server_name  localhost;</p>
+<pre><code>#charset koi8-r;
+#access_log  /var/log/nginx/host.access.log  main;
+
+location / {
+    root   /usr/share/nginx/html;   首页的目录
+    index  index.html index.htm;  首页排序
+}
+
+#error_page  404              /404.html;
+
+# redirect server error pages to the static page /50x.html
+#
+error_page   500 502 503 504  /50x.html;
+location = /50x.html {
+    root   /usr/share/nginx/html;
+}
+
+# proxy the PHP scripts to Apache listening on 127.0.0.1:80
+#
+#location ~ \.php$ {
+#    proxy_pass   http://127.0.0.1;
+#}
+
+# pass the PHP scripts to FastCGI server listening on 127.0.0.1:9000
+#
+#location ~ \.php$ {
+#    root           html;
+#    fastcgi_pass   127.0.0.1:9000;
+#    fastcgi_index  index.php;
+#    fastcgi_param  SCRIPT_FILENAME  /scripts$fastcgi_script_name;
+#    include        fastcgi_params;
+#}
+
+# deny access to .htaccess files, if Apache&apos;s document root
+# concurs with nginx&apos;s one
+#
+#location ~ /\.ht {
+#    deny  all;
+#}</code></pre><p>}</p>
+<p>nginx反向代理</p>
+<p>upstream  mytomcat {<br>server 192.168.1.120:8080;<br>}</p>
+<p>location / {<br>proxy_pass <a href="http://mytomocat" target="_blank" rel="noopener">http://mytomocat</a>;<br>proxy_pass_header Server;<br>proxy_set_header Host $host;<br>proxy_set_header X-Real-IP $remote_addr;<br>proxy_set_header X-Forward-For  $proxy_add_x_forwarded_for;<br>}</p>
+<p>nginx负载均衡</p>
+<p>1.轮询（RR）<br>upstream mytomcat {<br>server 192.168.1.120:8080;<br>server 192.168.1.121:8080;<br>}<br>2.权重<br>upstream mytomcat {<br>server 192.168.1.120:8080 weight=1;<br>server 192.168.1.121:8080 weight=2;<br>}<br>3.ip_hash（将同一个IP访问同一个服务器）<br>upstream mytomcat {<br>       ip_hash；<br>server 192.168.1.120:8080;<br>server 192.168.1.121:8080;<br>}<br>4.fair（按后端服务器的响应时间来分配请求）<br>upstream mytomcat {<br>server 192.168.1.120:8080;<br>server 192.168.1.121:8080;<br>fair;<br>}<br>5.url_hash<br>upstream backserver {<br>    server squid1:3128;<br>    server squid2:3128;<br>    hash $request_uri;<br>    hash_method crc32;<br>}</p>
+<p>在server中添加</p>
+<p>location / {<br>root   /usr/share/nginx/html;<br>index index.html index.htm;<br>proxy_pass <a href="http://mytomcat" target="_blank" rel="noopener">http://mytomcat</a>;<br>}</p>
+<p>nginx的日志格式</p>
+<pre><code>log_format  main  &apos;$remote_addr -  [$time_local] &quot;$remote_user$request&quot; &apos;
+                  &apos;$status $body_bytes_sent &quot;$http_referer&quot; &apos;
+                  &apos;&quot;$http_user_agent&quot; &quot;$http_x_forwarded_for&quot;&apos;;</code></pre><p>192.168.1.49 - - [20/Feb/2019:06:01:42 -0500] “GET / HTTP/1.1” 304 0 “-“ “Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.109 Safari/537.36”</p>
+<p>参数明细表<br>$remote_addr 客户端ip(代理服务器，显示代理服务ip)<br>$remote_user 用于记录远程客户端的用户名称（一般为”-“）<br>$time_local 用于记录访问时间和时区<br>$request 用于记录请求的url以及请求方法<br>$status 响应状态码，例如：200，404等<br>$boby_bytes_sent 给客户端发送的文件主体内容节数<br>$http_user_agent 用户所使用的代理（一般为浏览器）<br>$http_x_forwarded_for 可以记录客户端IP，通过代理服务器来记录客户端的IP地址<br>$http_referer 可以记录用户是从哪个链接访问过来的<br>$request_time 整个请求的时间</p>
+
+      
+    </div>
+    
+      <footer class="article-footer">
+        完
+      </footer>
+    
+  </div>
+  
+    
+<nav id="article-nav">
+  <div class="article-nav-block">
+    
+      <a href="/2021/03/21/docker-compose详解/" id="article-nav-newer" class="article-nav-link-wrap">
+        <strong class="article-nav-caption"></strong>
+        <div class="article-nav-title">
+          
+            docker-compose详解
+          
+        </div>
+      </a>
+    
+  </div>
+  <div class="article-nav-block">
+    
+      <a href="/2021/03/21/dockerfile参数/" id="article-nav-older" class="article-nav-link-wrap">
+        <div class="article-nav-title">dockerfile参数</div>
+        <strong class="article-nav-caption"></strong>
+      </a>
+    
+  </div>
+</nav>
+
+    
+<div id="gitmentContainer"></div>
+<link rel="stylesheet" href="https://imsun.github.io/gitment/style/default.css">
+<script src="https://imsun.github.io/gitment/dist/gitment.browser.js"></script>
+<script>
+var gitment = new Gitment({
+  owner: 'haochanc',
+  repo: 'haochanc.github.io',
+  oauth: {
+    client_id: 'ece3337c08ff6f853acc',
+    client_secret: '892b8fe3400f057ab9eb1f01f7983e9bd70426bc',
+  },
+})
+gitment.render('gitmentContainer')
+</script>
+
+
+  
+  
+</article>
+</section>
+        <aside id="sidebar">
+  
+    <div class="widget-box">
+  <div class="avatar-box">
+    <img class="avatar" src="/images/tx.jpeg" title="头像来自网络"></img>
+    <h3 class="avatar-name">
+      
+        好馋
+      
+    </h3>
+    <p class="avatar-slogan">
+      爱折腾的程序员
+    </p>
+  </div>
+</div>
+
+
+  
+    
+
+  
+    
+
+  
+    
+  
+    
+  <div class="widget-box">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/03/">March 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/07/">July 2019</a></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-box">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2021/03/21/RabbitMQ/">RabbitMQ</a>
+          </li>
+        
+          <li>
+            <a href="/2021/03/21/常见问题记录/">常见问题记录</a>
+          </li>
+        
+          <li>
+            <a href="/2021/03/21/iptables参数详解/">iptables参数详解</a>
+          </li>
+        
+          <li>
+            <a href="/2021/03/21/DNS域名解析详解/">DNS域名解析详解</a>
+          </li>
+        
+          <li>
+            <a href="/2021/03/21/docker-compose详解/">docker-compose详解</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+      <div class="widget-box">
+    <h3 class="widget-title">友链</h3>
+    <div class="widget">
+      
+        <a style="display: block;" href="https://github.com/haochanc/" title target='_blank'
+        >爱吃的小馋猫</a>
+      
+    </div>
+  </div>
+
+  
+</aside>
+      </div>
+      <footer id="footer">
+  <div class="foot-box global-width">
+    &copy; 2021 Chan Hao &nbsp;&nbsp;
+    Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    &nbsp;|&nbsp;主题 <a href="https://github.com/yiluyanxia/hexo-theme-antiquity">antiquity</a>
+    <br>
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  </div>
+
+      <script src="https://code.jquery.com/jquery-2.0.3.min.js"></script>
+<script>
+if (!window.jQuery) {
+var script = document.createElement('script');
+script.src = "/js/jquery-2.0.3.min.js";
+document.body.write(script);
+}
+</script>
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+
+
+    </div>
+    <nav id="mobile-nav" class="mobile-nav-box">
+  <div class="mobile-nav-img mobile-nav-top"></div>
+  
+    <a href="/" class="mobile-nav-link">首页</a>
+  
+    <a href="/archives" class="mobile-nav-link">归档</a>
+  
+  <div class="mobile-nav-img  mobile-nav-bottom"></div>
+</nav>    
+  </div>
+</body>
+</html>

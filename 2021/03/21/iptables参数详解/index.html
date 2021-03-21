@@ -5,25 +5,25 @@
   
 
   
-  <title>test | haochan&#39;s blog</title>
+  <title>iptables参数详解 | haochan&#39;s blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   
   
   
   <meta name="keywords" content="blog">
   
-  <meta name="description" content="This is a test page!hello world! I LOVE YOU!">
+  <meta name="description" content="iptables (选项)（参数）-t&amp;lt;表&amp;gt;:指定要操作的表-A:向规则链中添加条目-D:向规则链中删除条目-I:向规则链中插入条目-R:替换规则链中的条目-L:显示规则链中已有的条目-F:清除规则链中的条目-Z:清除规则链中的数据包计算器和字节计算器-N:创建新的用户自定义规则链-P:定义规则链中的默认目标-p:指定要匹配的数据包协议类型-s:指定要匹配的数据包源ip地址-j&amp;lt;">
 <meta name="keywords" content="blog">
 <meta property="og:type" content="article">
-<meta property="og:title" content="test">
-<meta property="og:url" content="https://haochanc.github.io/2019/07/19/test/index.html">
+<meta property="og:title" content="iptables参数详解">
+<meta property="og:url" content="https://haochanc.github.io/2021/03/21/iptables参数详解/index.html">
 <meta property="og:site_name" content="haochan&#39;s blog">
-<meta property="og:description" content="This is a test page!hello world! I LOVE YOU!">
+<meta property="og:description" content="iptables (选项)（参数）-t&amp;lt;表&amp;gt;:指定要操作的表-A:向规则链中添加条目-D:向规则链中删除条目-I:向规则链中插入条目-R:替换规则链中的条目-L:显示规则链中已有的条目-F:清除规则链中的条目-Z:清除规则链中的数据包计算器和字节计算器-N:创建新的用户自定义规则链-P:定义规则链中的默认目标-p:指定要匹配的数据包协议类型-s:指定要匹配的数据包源ip地址-j&amp;lt;">
 <meta property="og:locale" content="Chinese">
-<meta property="og:updated_time" content="2019-07-19T14:00:44.231Z">
+<meta property="og:updated_time" content="2021-03-21T11:47:44.351Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="test">
-<meta name="twitter:description" content="This is a test page!hello world! I LOVE YOU!">
+<meta name="twitter:title" content="iptables参数详解">
+<meta name="twitter:description" content="iptables (选项)（参数）-t&amp;lt;表&amp;gt;:指定要操作的表-A:向规则链中添加条目-D:向规则链中删除条目-I:向规则链中插入条目-R:替换规则链中的条目-L:显示规则链中已有的条目-F:清除规则链中的条目-Z:清除规则链中的数据包计算器和字节计算器-N:创建新的用户自定义规则链-P:定义规则链中的默认目标-p:指定要匹配的数据包协议类型-s:指定要匹配的数据包源ip地址-j&amp;lt;">
   
     <link rel="alternate" href="/atom.xml" title="haochan&#39;s blog" type="application/atom+xml">
   
@@ -68,21 +68,21 @@
   </div>
 </header>
       <div id="middlecontent" title class="global-width sidebar-right">
-        <section id="main"><article id="post-test" class="article global-container article-type-post" itemscope itemprop="blogPost">
+        <section id="main"><article id="title-iptables参数详解" class="article global-container article-type-title" itemscope itemprop="blogPost">
   
     <header class="article-header">
       
   
     <h1 class="article-title" itemprop="name">
-      test
+      iptables参数详解
     </h1>
   
 
     </header>
   
   <div class="article-meta">
-    <a href="/2019/07/19/test/" class="article-date">
-  <time datetime="2019-07-19T13:57:30.000Z" itemprop="datePublished">2019-07-19</time>
+    <a href="/2021/03/21/iptables参数详解/" class="article-date">
+  <time datetime="2021-03-21T11:47:18.000Z" itemprop="datePublished">2021-03-21</time>
 </a>
     
     
@@ -97,9 +97,9 @@
     
     <div class="article-content article-content-cloud" itemprop="articleBody">
       
-        <h3 id="This-is-a-test-page"><a href="#This-is-a-test-page" class="headerlink" title="This is a test page!"></a>This is a test page!</h3><h6 id="hello-world"><a href="#hello-world" class="headerlink" title="hello world!"></a>hello world!</h6><blockquote>
-<p>I LOVE YOU!</p>
-</blockquote>
+        <p>iptables (选项)（参数）<br>-t&lt;表&gt;:指定要操作的表<br>-A:向规则链中添加条目<br>-D:向规则链中删除条目<br>-I:向规则链中插入条目<br>-R:替换规则链中的条目<br>-L:显示规则链中已有的条目<br>-F:清除规则链中的条目<br>-Z:清除规则链中的数据包计算器和字节计算器<br>-N:创建新的用户自定义规则链<br>-P:定义规则链中的默认目标<br>-p:指定要匹配的数据包协议类型<br>-s:指定要匹配的数据包源ip地址<br>-j&lt;目标&gt;:指定要跳转的目标<br>-i&lt;网络接口&gt;:指定数据包进入本机的网络接口<br>-o&lt;网络接口&gt;:指定数据包要离开本机的网络接口</p>
+<p>iptables命令选项输入顺序：iptables  -t  表名 &lt;-A/I/D/R&gt; 规则链名 [规则号] &lt;-i/o 网卡名&gt;  -p  协议名  &lt;-s 源IP/源子网&gt;  –sport  源端口   &lt;-d 目标ip/目标子网&gt; –dport 目标端口  -j  动作<br>表名包括：<br>raw:高级功能，如：网址过滤<br>managle:数据包修改，用于实现服务质量<br>net：地址转换，用于网关路由器<br>filter：包过滤，用于防火墙规则<br>规则链条包括：<br>INPUT链：处理输入数据包<br>OUTPUT链：处理输出数据包<br>FORWARD链：处理转发数据包<br>PREROUTING链：用于目标地址转换（DNAT）<br>POSTOUTING链：用于源地址转换（SNAT）<br> 动作包括：<br>ACCEPT：接收数据包<br>DROP：丢弃数据包<br>REDIRECT：重定向、映射、透明代理<br>SNAT：源地址转换<br>DNAT:目标地址转换<br>MASQUERADE:IP伪装（NAT),用于ADSL<br>LOG:日志记录</p>
+<p>iptables-save:用于将linux内核中的iptables表导出到标准输出商，通常，使用shell中I/O重定向保存在某个文件中。<br>-c:指定要保存的iptables表时，保存当前的数据包计算器和字节计算器<br>-t：指定要保存的表</p>
 
       
     </div>
@@ -114,11 +114,11 @@
 <nav id="article-nav">
   <div class="article-nav-block">
     
-      <a href="/2021/03/21/linux系统用户账号管理/" id="article-nav-newer" class="article-nav-link-wrap">
+      <a href="/2021/03/21/常见问题记录/" id="article-nav-newer" class="article-nav-link-wrap">
         <strong class="article-nav-caption"></strong>
         <div class="article-nav-title">
           
-            linux系统用户账号管理
+            常见问题记录
           
         </div>
       </a>
@@ -126,8 +126,8 @@
   </div>
   <div class="article-nav-block">
     
-      <a href="/2019/07/19/hello-world/" id="article-nav-older" class="article-nav-link-wrap">
-        <div class="article-nav-title">Hello World</div>
+      <a href="/2021/03/21/DNS域名解析详解/" id="article-nav-older" class="article-nav-link-wrap">
+        <div class="article-nav-title">DNS域名解析详解</div>
         <strong class="article-nav-caption"></strong>
       </a>
     

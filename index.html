@@ -66,6 +66,1186 @@
       <div id="middlecontent" title class="global-width sidebar-right">
         <section id="main">
   
+    <article id="title-RabbitMQ" class="article global-container article-type-title" itemscope itemprop="blogPost">
+  
+    <header class="article-header">
+      
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2021/03/21/RabbitMQ/">RabbitMQ</a>
+    </h1>
+  
+
+    </header>
+  
+  <div class="article-meta">
+    <a href="/2021/03/21/RabbitMQ/" class="article-date">
+  <time datetime="2021-03-21T11:52:07.000Z" itemprop="datePublished">2021-03-21</time>
+</a>
+    
+    
+  </div>
+  
+
+  <div class="article-inner">
+    
+    <div class="article-content article-content-cloud" itemprop="articleBody">
+      
+        <h5 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h5><p>AMQP，即Advanced Message Queuing Protocal,高级消息队列协议，是应用层协议的一个开放标准，为面对消息的中间件设计。消息中间件主要用于组件之间的解藕。RabbitMQ是一个开源的AMQP实现，用于在分布式系统中存储转发消息。</p>
+<h6 id="ConnectionFactory、Connection、Channel"><a href="#ConnectionFactory、Connection、Channel" class="headerlink" title="ConnectionFactory、Connection、Channel"></a>ConnectionFactory、Connection、Channel</h6><ul>
+<li>connectionfactory为connection的制造工厂</li>
+<li>connection是rabbitMQ的socket链接，它封装了socket协议相关部分逻辑</li>
+<li>channel是我们与RabbitMQ打交道的最重要的一个接口，我们大部分的业务操作是在channel这个接口中完成，包括定义Quenue、定义Exchange、绑定Queue与Exchage、发布消息等。</li>
+</ul>
+<h6 id="Queue"><a href="#Queue" class="headerlink" title="Queue"></a>Queue</h6><ul>
+<li>Queue(队列)是RabbitMQ的内部对象，用于存储信息</li>
+<li>RabbitMQ的消息都只能存储在Queue中，生产者(p)生产消息并最终投递到Queue中，消费者(c)可以从queue中获取消息并消费</li>
+<li>多个消费者可以订阅同一个Queue,这时Queue中的消息会被平均分摊给多个消费者进行处理，而不是每个消费者收到所有消息并处理</li>
+</ul>
+<h6 id="消息确认"><a href="#消息确认" class="headerlink" title="消息确认"></a>消息确认</h6><ul>
+<li>在实际应用中，可能会发生消费者收到queue中的消息，但没有处理完就宕机，这种情况就可能会导致信息的丢失，为了避免这种情况发生，我们可以要求消费者在消费完消息后发送一个回执给RabbitMQ，RabbitMQ收到消息回执后才能将消息从Queue中移除</li>
+<li>如果RabbitMQ没有收到回执并检测到消费者的RabbitMQ连接断开，则RabbitMQ会将消息发送给其他消费者进行处理。</li>
+</ul>
+<h6 id="消息持久化"><a href="#消息持久化" class="headerlink" title="消息持久化"></a>消息持久化</h6><ul>
+<li>如果我们希望即使在RabbitMQ服务重启的情况下，也不会丢失消息，我们可以将Queue与Message都设置为可持久化(durable)</li>
+</ul>
+<h6 id="Prefetch-count-预取数量"><a href="#Prefetch-count-预取数量" class="headerlink" title="Prefetch count(预取数量)"></a>Prefetch count(预取数量)</h6><ul>
+<li>如果有多个消费者同时订阅同一个Queue中的消息，Queue中的消息会被平摊给多个消费者，这时如果每个消息的处理时间不同，就有可能导致某些消费者一直在忙，而另一些消费者很快处理完手头工作处于空闲情况</li>
+<li>我们可以通过设置prefetchCount来限制queue每次发送给每个消费者的消息数。</li>
+</ul>
+<h6 id="Exchange-交换器"><a href="#Exchange-交换器" class="headerlink" title="Exchange(交换器)"></a>Exchange(交换器)</h6><ul>
+<li>生产者将消息发送到Exchage(交换器)，由Exchage将消息路由到一个或多个Queue中</li>
+</ul>
+<h6 id="routing-key-路由值"><a href="#routing-key-路由值" class="headerlink" title="routing key(路由值)"></a>routing key(路由值)</h6><ul>
+<li>生产者将消息发送到Exchage的时候，一般会指定一个routing key,来指定这个消息的路由规则，而这个routing key需要与Exchage Type及binding key联合使用才能生效，routing key设定的长度限制为255bytes</li>
+</ul>
+<h6 id="binding-绑定"><a href="#binding-绑定" class="headerlink" title="binding(绑定)"></a>binding(绑定)</h6><ul>
+<li>rabbitMQ中通过Binding将Exchage与Queue关联起来，这样RabbitMQ就知道如何正确地将消息路由到指定的queue了。</li>
+</ul>
+<h6 id="binding-key"><a href="#binding-key" class="headerlink" title="binding key"></a>binding key</h6><ul>
+<li>在绑定Exchage与Queue的同时，一般会指定一个binding key;消费者将消息发送给exchange时，一般会指定一个routing key;当binding key与routing key相匹配时，消息将会被路由到对应的queue中。</li>
+</ul>
+<h6 id="exchage-types"><a href="#exchage-types" class="headerlink" title="exchage types"></a>exchage types</h6><ul>
+<li>RabbitMQ常用的Exchage Type有fanout、direct、topic、headers这四种</li>
+<li>fanout：将所有发送到该exchage的消息路由到所有与它绑定的Queue中。</li>
+<li>direct:把消息路由到那些binding key与routing key完全匹配的queue中</li>
+<li>topic：范围匹配,binding key中可以存在两种特殊字符”*“与”#”用于模糊匹配，其中”*“用于匹配一个单词，”#”用于匹配零个或多个单词。</li>
+<li>headers:根据发送的消息内容中的header属性进行匹配。</li>
+</ul>
+<h6 id="RPC-远程过程调用"><a href="#RPC-远程过程调用" class="headerlink" title="RPC(远程过程调用)"></a>RPC(远程过程调用)</h6><p>RabbitMQ中实现RPC的机制：</p>
+<ul>
+<li>客户端发送请求（消息）时，在消息属性中设置两个值replyTo(用于告诉服务器处理完成后将通知我的消息发送到这个queue中)和correlation(此次请求的标识号，服务器处理完成后需要将此属性返还，客户端将根据这个id了解哪条请求被成功执行了或者执行失败)</li>
+<li>服务器端收到消息并处理</li>
+<li>服务器端处理完消息后，将生成一条应答消息到replyTo指定的queue，同时带上correlationld属性</li>
+<li>客户端之前订阅replyTo指定的Queue,从中收到服务器的应答消息后，根据其中的correlation属性分析哪条请求被执行了</li>
+</ul>
+<h5 id="rabbitmq集群搭建"><a href="#rabbitmq集群搭建" class="headerlink" title="rabbitmq集群搭建"></a>rabbitmq集群搭建</h5><ol>
+<li>安装rabbitmq</li>
+</ol>
+<pre><code>yum install rabbitmq-server</code></pre><p>2.启动服务</p>
+<pre><code>systemctl start rabbitmq-server
+rabbitmq-server -detached(此方法可用，但偶尔出错)</code></pre><ol start="3">
+<li>查看服务状态</li>
+</ol>
+<pre><code>rabbitmqctl status
+systemctl status rabbitmq-server(建议)</code></pre><p>4.配置网页插件</p>
+<pre><code>rabbotmq-plugins enable rabbit_management</code></pre><p>5.配置web账号密码（默认账号密码为guest guest）</p>
+<pre><code>rabbitmqctl add_user rabbitmq rabbitrmq //添加用户，后面两个参数分别为用户名和密码
+rabbitmqctl set_pemissions -p / rabbitmq &quot;.*&quot; &quot;.*&quot; &quot;.*&quot; //添加权限，具体参数查看该命令帮助
+rabbitmqctl set_user_tags rabbitmq administrator //修改用户角色</code></pre>
+      
+    </div>
+    
+  </div>
+  
+  
+</article>
+
+  
+    <article id="title-常见问题记录" class="article global-container article-type-title" itemscope itemprop="blogPost">
+  
+    <header class="article-header">
+      
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2021/03/21/常见问题记录/">常见问题记录</a>
+    </h1>
+  
+
+    </header>
+  
+  <div class="article-meta">
+    <a href="/2021/03/21/常见问题记录/" class="article-date">
+  <time datetime="2021-03-21T11:49:22.000Z" itemprop="datePublished">2021-03-21</time>
+</a>
+    
+    
+  </div>
+  
+
+  <div class="article-inner">
+    
+    <div class="article-content article-content-cloud" itemprop="articleBody">
+      
+        <p>1.ntpdate时间同步：使用命令ntpdate asia.pool.ntp.org后还差两小时 复制正确时间机器的/etc/localtime文件<br>2.Delta RPMs disabled because /usr/bin/applydeltarpm not installed.<br>   解决方法：yum provides ‘*/applydeltarpm’<br>                      yum  install   deltarpm<br>3.永久改主机名命令：hostnamectl set-hostname <new hostname><br>4.[Errno 14] curl#60 - “Peer’s Certificate has expired.”   解决方法：更新时间ntpdate   us.pool.ntp.org<br>5.mac上制作linuxU盘启动盘：diskutil  list;   diskutil  unmountDISK  /dev/disk2;   sudo  dd if=Download/Centos7.iso  of=/dev/disk2  bs=1m.</new></p>
+<ol start="6">
+<li>开启ipv4路由转发<br>cat /proc/sys/net/ipv4/ip_forward<br>echo 1 &gt; /proc/sys/net/ipv4/ip_forward<br>iptables -P FORWARD ACCEPT</li>
+<li>查看linux服务器的公网IP<br> curl inconfig.me<br> curl cip.cc</li>
+<li>haproxy报错<br>[ALERT] 318/034522 (1) : Cannot open configuration file/directory /usr/local/etc/haproxy/haproxy.cfg : Permission denied<br>解决方法：setenforce 0</li>
+<li>用mysqladmin给数据库修改密码<br>mysqladmin  -u root  -p password<br>Enter password:<br>New password:<br>Confirm new password:</li>
+<li>systemctl restart network<br>报错：fail to restart network.service: unit not found<br>解决方案: yum  –disablerepo=*  –enablerepo=c7-media  install  initscript</li>
+<li>http请求方法(8种)：GET POST HEAD OPTIONS PUT DELETE  TRACE CONNECT<br>Get:获取资源。用来请求已被URI识别的资源，指定资源经过解析后返回响应内容。<br>post:传输实体文件<br>head:获取报文的头信息<br>options:询问支持的请求方法<br>put:传输文件（存在安全问题，一般不使用）<br>delete:删除文件<br>trace:追踪路径<br>connect:使用隧道协议连接代理</li>
+</ol>
+<p>12.debian源更换<br>/etc/apt/sources.list<br>deb <a href="http://mirrors.aliyun.com/ubuntu/" target="_blank" rel="noopener">http://mirrors.aliyun.com/ubuntu/</a> trusty main restricted universe multiverse<br>deb-src <a href="http://mirrors.aliyun.com/ubuntu/" target="_blank" rel="noopener">http://mirrors.aliyun.com/ubuntu/</a> trusty main restricted universe multiverse</p>
+<p>13.python3.7安装<br>关于ssl无法使用，安装以下依赖，重新编译<br>yum install  gcc zlib-devel bzip2-devel openssl-devel ncurses-devel sqlite-devel readline-devel tk-devel<br> yum install gcc* glien* -y<br>编译时报错 ModuleNotFoundError: No module named ‘_ctypes’<br>yum install libffi-devel -y</p>
+
+      
+    </div>
+    
+  </div>
+  
+  
+</article>
+
+  
+    <article id="title-iptables参数详解" class="article global-container article-type-title" itemscope itemprop="blogPost">
+  
+    <header class="article-header">
+      
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2021/03/21/iptables参数详解/">iptables参数详解</a>
+    </h1>
+  
+
+    </header>
+  
+  <div class="article-meta">
+    <a href="/2021/03/21/iptables参数详解/" class="article-date">
+  <time datetime="2021-03-21T11:47:18.000Z" itemprop="datePublished">2021-03-21</time>
+</a>
+    
+    
+  </div>
+  
+
+  <div class="article-inner">
+    
+    <div class="article-content article-content-cloud" itemprop="articleBody">
+      
+        <p>iptables (选项)（参数）<br>-t&lt;表&gt;:指定要操作的表<br>-A:向规则链中添加条目<br>-D:向规则链中删除条目<br>-I:向规则链中插入条目<br>-R:替换规则链中的条目<br>-L:显示规则链中已有的条目<br>-F:清除规则链中的条目<br>-Z:清除规则链中的数据包计算器和字节计算器<br>-N:创建新的用户自定义规则链<br>-P:定义规则链中的默认目标<br>-p:指定要匹配的数据包协议类型<br>-s:指定要匹配的数据包源ip地址<br>-j&lt;目标&gt;:指定要跳转的目标<br>-i&lt;网络接口&gt;:指定数据包进入本机的网络接口<br>-o&lt;网络接口&gt;:指定数据包要离开本机的网络接口</p>
+<p>iptables命令选项输入顺序：iptables  -t  表名 &lt;-A/I/D/R&gt; 规则链名 [规则号] &lt;-i/o 网卡名&gt;  -p  协议名  &lt;-s 源IP/源子网&gt;  –sport  源端口   &lt;-d 目标ip/目标子网&gt; –dport 目标端口  -j  动作<br>表名包括：<br>raw:高级功能，如：网址过滤<br>managle:数据包修改，用于实现服务质量<br>net：地址转换，用于网关路由器<br>filter：包过滤，用于防火墙规则<br>规则链条包括：<br>INPUT链：处理输入数据包<br>OUTPUT链：处理输出数据包<br>FORWARD链：处理转发数据包<br>PREROUTING链：用于目标地址转换（DNAT）<br>POSTOUTING链：用于源地址转换（SNAT）<br> 动作包括：<br>ACCEPT：接收数据包<br>DROP：丢弃数据包<br>REDIRECT：重定向、映射、透明代理<br>SNAT：源地址转换<br>DNAT:目标地址转换<br>MASQUERADE:IP伪装（NAT),用于ADSL<br>LOG:日志记录</p>
+<p>iptables-save:用于将linux内核中的iptables表导出到标准输出商，通常，使用shell中I/O重定向保存在某个文件中。<br>-c:指定要保存的iptables表时，保存当前的数据包计算器和字节计算器<br>-t：指定要保存的表</p>
+
+      
+    </div>
+    
+  </div>
+  
+  
+</article>
+
+  
+    <article id="title-DNS域名解析详解" class="article global-container article-type-title" itemscope itemprop="blogPost">
+  
+    <header class="article-header">
+      
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2021/03/21/DNS域名解析详解/">DNS域名解析详解</a>
+    </h1>
+  
+
+    </header>
+  
+  <div class="article-meta">
+    <a href="/2021/03/21/DNS域名解析详解/" class="article-date">
+  <time datetime="2021-03-21T11:45:56.000Z" itemprop="datePublished">2021-03-21</time>
+</a>
+    
+    
+  </div>
+  
+
+  <div class="article-inner">
+    
+    <div class="article-content article-content-cloud" itemprop="articleBody">
+      
+        <p>一次完整的查询的查询请求经过的流程<br>client –&gt;hosts文件 –&gt;DNS Service<br>         local  cache –&gt; DNS server(recursion) –&gt; server cache –&gt; iteration（迭代）–&gt;<br>         解析答案<br>                 肯定答案：<br>                 否定答案：请求的条目不存在等原因导致无法返回结果<br>                 权威答案：<br>                 非权威答案：<br>区域解析库：由众多RR组成<br>        资源记录类型：A AA PTR SOA NS CNAME MX<br>        SOA：start of authority:起始授权记录：一个区域解析库有且仅有一个SOA记录，而必须为解析库的第一条记录；<br>        A：internet address .  作用：FQDN –&gt; IP<br>        AAAA:FQDN –&gt;IPv6<br>        PTR: pionter. IP –&gt;FQDN<br>        NS : name server:专用于表明当前区域的DNS服务器<br>       CNAME ：别名记录<br>       MX：mai exchange 邮件交换器</p>
+<p>资源记录定义的格式：<br>       语法： name  [TTL]    IN        rr_type    value</p>
+<pre><code>  注意：
+         （1）TTL可从全局继承
+         （2）@可用于引用当前区域的名字
+         （3）同一个名字可以通过多条记录定义多个不同的值，此时DNS会以轮询方式响应
+         （4）同一个值也可以有多个不同的定义名字，通过多个不同的名字指向同一个值，仅表示通过不同的名字，可以找到同一个主机。
+  SOA:
+           name:当前区域的名字
+           value:有多部分组成
+                     （1）当前区域的主DNS服务器的FQDN，也可以使用当前区域的名字
+                     （2）目前区域的邮箱地址，但地址不能使用@符号，一般用.代替
+                     （3）主从服务协调属性的定义以及否定的答案的统一的TTL
+           例如：
+           magedu.com.   86400   IN   SOA   ns.magedu.com.   nsadmin.magedu.com.  (
+                                     2015042201      ;序列号
+                                     2H                         ;刷新时长
+                                     10M                       ;重试时间
+                                     1w                          ;过期时间
+                                     1D                          ;否定答案的TTL值
+           ）
+  NS:
+           name：当前区域的名字
+           value：当前区域的某DNS服务器的名字，例如：ns.magedu.com.
+                    注意：一个区域可以有多条NS记录
+           例如：
+           magedu.com.           IN        NS          ns1.magedu.com.
+           magedu.com            IN        NS          ns2.magedu.com.
+           注意：
+                 （1）相邻的两个资源记录的name相同时，后续的可省略
+                 （2）对NS记录而言，任何一个ns记录后面的服务器名字，都应该在后续有一个A记录
+  MX：
+           name:当前区域的名字
+           value:当前区域的某邮件服务器（smtp服务器）的主机名
+                     一个区域内，MX记录可有多个，但每个记录的value之前都应该有一个数字（0-99），表示此服务器的优先级，数字越小，优先级越高
+           例如：
+           magedu.com.     IN          MX       10       mx1.megedu.com.
+           注意：
+               （1）对MX记录而言，任何一个MX记录后面的服务器名字，都应该在后续有个A 记录
+  A:
+           name：某主机的FQDN
+           value：主机名对应主机的IP地址
+          例如：
+                  www.magedu.com.    IN     A    1.1.1.1
+                  www.magedu.com.    IN     A    1.1.1.2
+         注意：
+                  *.magedu.com.    IN     A    1.1.1.4
+                   magedu.com.     IN     A .   1.1.1..4
+                  避免用户写错名称时，可通过泛域名进行解析到某特定地址
+PTR:
+         name:IP，有特定格式，把IP地址反过来写，1.2.3.4 要写作4.3.2.1，而有特定后缀：in-addr.arpa.,所以完整写法为：4.3.2.1.in-addr.arpa.
+         value:FQDN
+         例如：
+                 4.3.2.1.in-addr.arpa.   IN     PTR    www.baidu.com</code></pre><p>   CNAME:<br>             name:别名的FQDN<br>             value:正名的FQDN<br>             例如：<br>                     web.magedu.com    IN      CNAME      <a href="http://www.magedu.com" target="_blank" rel="noopener">www.magedu.com</a></p>
+
+      
+    </div>
+    
+  </div>
+  
+  
+</article>
+
+  
+    <article id="title-docker-compose详解" class="article global-container article-type-title" itemscope itemprop="blogPost">
+  
+    <header class="article-header">
+      
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2021/03/21/docker-compose详解/">docker-compose详解</a>
+    </h1>
+  
+
+    </header>
+  
+  <div class="article-meta">
+    <a href="/2021/03/21/docker-compose详解/" class="article-date">
+  <time datetime="2021-03-21T11:44:11.000Z" itemprop="datePublished">2021-03-21</time>
+</a>
+    
+    
+  </div>
+  
+
+  <div class="article-inner">
+    
+    <div class="article-content article-content-cloud" itemprop="articleBody">
+      
+        <h5 id="术语"><a href="#术语" class="headerlink" title="术语"></a>术语</h5><ul>
+<li>服务：一个应用容器，实际上可以运行多个相同镜像的实例。</li>
+<li>项目：由一组关联的应用容器组成一个完整业务单元  </li>
+</ul>
+<p>可见，一个项目可以由多个服务（容器）关联而成，compose面向项目进行管理</p>
+<h5 id="命令说明"><a href="#命令说明" class="headerlink" title="命令说明"></a>命令说明</h5><p>docker-compose [COMMAND] –help 或者 docker-compose help [COMMAND]可以具体查看某个命令的使用格式</p>
+<p><em>命令选项</em></p>
+<ul>
+<li>-f –file FILE指定使用的compose模版文件，默认为docker-compose.yml</li>
+<li>-p –project-name NAME指定项目名称，默认将使用所在目录名称作为项目名</li>
+<li>–verbose 输出更多调试信息</li>
+<li>-v，–version 打印版本并退出</li>
+</ul>
+<p><em>build</em><br>格式为：docker-compose build [option] [SERICE…]<br>构建（重新构建）项目中的服务容器。服务容器一旦构建后，将会带上一个标记名，例如对于 web 项目中的一个 db 容器，可能是 web_db。<br>可以随时在项目目录下运行 docker-compose build 来重新构建服务。<br>选项包括：</p>
+<ul>
+<li>–force-rm 删除构建过程中的临时容器</li>
+<li>–no-cache 构建镜像过程中不使用cache</li>
+<li>–pull 始终尝试通过pull来获取更新版本的镜像<br><em>config</em><br>验证compose文件格式是否正确，若正确则显示配置，若错误显示错误原因  </li>
+<li>down*<br>此命令将会停止up命令所启动的容器，并移除网络  </li>
+<li>exec*<br>进入指定的容器  </li>
+<li>images*<br>列出compose文件中包含的镜像  </li>
+<li>kill*<br>格式为 docker-compose kill [option] [SERVICE…]<br>通过发送SIGKILL信号来强制停止服务容器。支持-s参数来指定发送的信号。  </li>
+<li>logs*<br>docker-compose logs [options] [SERVICE…]<br>查看服务器的输出。默认情况下，docker-compose将对不同的服务输出使用不同的颜色来区分。可以通过–no-color来关闭颜色。  </li>
+<li>pause*<br>格式为docker-compose pause [SERVICE…]暂停一个服务容器</li>
+<li>port*<br>格式为docker-compose port [options] SERVICE PRIVATE_PORT.<br>打印某个容器端口所映射的公共端口  </li>
+</ul>
+<p>–protocol=proto 指定端口协议，tcp（默认值）或者udp。<br>–index=index如果同一服务存在多个容器，指定命令对象容器的序号<br><em>ps</em><br>格式为docker-compose ps [option] [SERVICE…]列出项目中目前的所有容器  </p>
+<h5 id="YAML模版文件"><a href="#YAML模版文件" class="headerlink" title="YAML模版文件"></a>YAML模版文件</h5><h6 id="compose模板文件"><a href="#compose模板文件" class="headerlink" title="compose模板文件"></a>compose模板文件</h6><pre><code>    version: &quot;3&quot;
+services:
+  webapp:
+    image: examples/web
+    ports:
+      - &quot;80:80&quot;
+    volumes:
+      - &quot;/data&quot;</code></pre><p>注意每个服务都必须通过image指定镜像或build指令（需要dockerfile）等来自动构建生成镜像。<br>如果build指令，在Dockerfile中设置的选项（例如：CMD,EXPOSE,VOLUME,ENV等）将会自动获取，无需在docker-compose.yaml中再次设置。<br><em>build</em><br>指定Dockerfile所在文件夹路径（可以是绝对路径，或者相对docker-copose.yml文件的路径）。compose将会利用它自动构建这个镜像，然后使用这个镜像。</p>
+<pre><code>build： /path/to/build/dir</code></pre><p><em>cap_add,cap_drop</em><br>指定容器的内核能力(capacity)分配<br>例如，让容器拥有所有能力可以指定为：</p>
+<pre><code>  cap_add:
+- ALL</code></pre><p>去掉NET_ADMIN能力可以指定为：</p>
+<pre><code>  cap_drop:
+- NET_ADMIN</code></pre><p><em>command</em><br>覆盖容器启动后默认执行的命令</p>
+<pre><code>command: echo &quot;hello world&quot; </code></pre><p><em>cgroup_parent</em><br>指定父cgroup组，意味着将继承改组的资源限制。<br>例如，创建一个cgroup组名称为cgroup_1</p>
+<pre><code>cgroup_parent: cgroup_1</code></pre><p><em>container_name</em><br>指定容器名称。默认会使用<em>项目名称_服务名称_序号</em>这样的格式</p>
+<pre><code>container_name: docker-web-container</code></pre><p>需要注意，指定容器名称后，该服务将无法进行扩展，因为docker不允许多个容器具有相同的名称。<br><em>devices</em><br>指定设备映射关系</p>
+<pre><code>  devices:
+-&quot;/dev/ttyUSB1:/dev/ttyUSB0&quot;</code></pre><p><em>depens_on</em><br>解决容器的依赖、启动先后的问题。以下例子中先启动redis db再启动web</p>
+<pre><code>    version: &apos;3&apos;
+services:
+  web:
+    build: .
+    depends_on:
+      - db
+      - redis
+  redis:
+    image: redis
+  db:
+    image: postgres</code></pre><p><em>dns</em><br>自定义DNS服务器。可以是一个值，也可以是一个列表。</p>
+<pre><code>    dns: 8.8.8.8
+
+dns:
+  - 8.8.8.8
+  - 114.114.114.114</code></pre><p><em>dns_search</em><br>配置DNS搜索域，可以是一个值，也可以是一个列表。</p>
+<pre><code>    dns_search: example.com
+dns_search:
+  - domain1.example.com
+  - domain2.example.com</code></pre><p><em>tmpfs</em><br>挂载一个tmpfs文件系统到容器</p>
+<pre><code>    tmpfs: /run
+tmpfs:
+  - /run
+  - /tmp</code></pre><p><em>env_file</em><br>从文件中获取环境变量，可以为单独的文件路径或列表。如果通过docker-compose  -f FILE方式来指定compose模板文件，则env_file中变量的路径会给予模板文件路径。如果有变量名称与enviroment指令冲突，按照惯例，以后者为准。</p>
+<pre><code>    env_file: .env
+
+env_file:
+  - ./common.env
+  - ./apps/web.env
+  - /opt/secrets.env</code></pre><p><em>environment</em><br>设置环境变量。你可以使用数组或字典两种格式。</p>
+<pre><code>    environment：
+  RACK_ENV: development
+  SESSION_SECRET:
+
+environment：
+  - RACK_ENV=development
+  - SESSION_SECRET</code></pre><p><em>expose</em><br>暴露端口，但不映射到宿主机，只被连接的服务访问。仅可以指定内部端口为参数</p>
+<pre><code>  expose：
+- &quot;3000&quot;
+- &quot;8000&quot;</code></pre><p><em>extra_hosts</em><br>类似Docker中的–add-host参数，指定额外的host名称映射信息。</p>
+<pre><code>  extra_hosts:
+- &quot;googledns:8.8.8.8&quot;
+- &quot;dockerhub:52.1.157.61&quot;</code></pre><p><em>healthcheck</em><br>通过命令检查容器是否健康运行。</p>
+<pre><code>  healthcheck:
+test: [&quot;CMD&quot;,&quot;curl&quot;,&quot;-f&quot;,&quot;http://localhost&quot;]
+interval: 1m30s
+timeout: 10s
+retries: 3</code></pre><p><em>image</em><br>指定为镜像或镜像ID。如果镜像在本地不存在，compose将会尝试去拉去这个镜像</p>
+<pre><code>image: ubuntu</code></pre><p><em>labels</em><br>为容器添加Docker元数据（metadata）信息。例如可以为容器添加辅助说明信息</p>
+<pre><code>  lables：
+com.startupteam.description: &quot;webapp for a startup team&quot;</code></pre><p><em>logging</em><br>配置日志选项</p>
+<pre><code>  logging:
+driver: syslog
+options:
+  syslog-address: &quot;tcp://192.168.0.42:123&quot;</code></pre><p>目前支持三种日志驱动类型</p>
+<pre><code>    driver：&quot;json-file&quot;
+driver: &quot;syslog&quot;
+driver: &quot;none&quot;</code></pre><p>options配置日志驱动的相关参数</p>
+<pre><code>  options：
+max-size: &quot;200k&quot;
+max-file: &quot;10&quot;</code></pre><p><em>networks</em><br>配置容器连接的网络</p>
+<pre><code>    version: &quot;3&quot;
+services:
+  some-service:
+    networks:
+     - some-network
+     - other-network
+networks:
+  some-network:
+  other-network:</code></pre><p><em>pid</em><br>跟主机系统共享进程命名空间。打开该选项的容器之间，以及容器和 宿主机系统之间可以通过进程ID来相互访问和操作</p>
+<pre><code>pid：&quot;host&quot;</code></pre><p><em>ports</em><br>暴露端口信息。使用宿主：容器（HOST:CONTAINER）格式，或者仅仅指定容器的端口（宿主将会随机选择端口）都可以。</p>
+<pre><code>  ports:
+- &quot;3000&quot;
+- &quot;8000:8000&quot;
+- &quot;49100:22&quot;
+- &quot;127.0.0.1:8001:8001&quot;</code></pre><p><em>volumes</em><br>数据卷所挂载的路径设置。可以设置宿主路径（HOST:CONTAINER）或加上访问模式（HOST:CONTAINER:ro）<br>该指令中路径支持相对路径</p>
+<pre><code>  volumes:
+- /var/lib/mysql
+- cache/:/tmp/cache
+- ~/configs:/etc/configs/:ro</code></pre><p><em>entrypoint</em><br>指定服务器容器启动后执行的入口文件</p>
+<pre><code>entrypoint： /code/entrypoint.sh</code></pre><p>指定容器中运行应用的用户名</p>
+<pre><code>user: nginx</code></pre><p>指定容器中工作目录</p>
+<pre><code>working_dir: /code</code></pre><p>指定容器退出后的重启策略为始终重启。在生产环境中推荐配置为 always 或者 unless-stopped</p>
+<pre><code>restart: always</code></pre><p>读取环境变量，compose模板文件支持动态读取主机的系统环境变量</p>
+<pre><code>  db:
+image: &quot;mongo:${MONGO_VERSION}&quot;</code></pre>
+      
+    </div>
+    
+  </div>
+  
+  
+</article>
+
+  
+    <article id="title-nginx安装与配置" class="article global-container article-type-title" itemscope itemprop="blogPost">
+  
+    <header class="article-header">
+      
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2021/03/21/nginx安装与配置/">nginx安装与配置</a>
+    </h1>
+  
+
+    </header>
+  
+  <div class="article-meta">
+    <a href="/2021/03/21/nginx安装与配置/" class="article-date">
+  <time datetime="2021-03-21T11:40:38.000Z" itemprop="datePublished">2021-03-21</time>
+</a>
+    
+    
+  </div>
+  
+
+  <div class="article-inner">
+    
+    <div class="article-content article-content-cloud" itemprop="articleBody">
+      
+        <p>nginx的安装</p>
+<ol>
+<li>编译</li>
+<li>yum安装<br> 编写nginx的yum源<br>  vim /etc/yum.repos.d/nginx.repo<br>[nginx-stable]<br>name=nginx stable repo<br>baseurl=<a href="http://nginx.org/packages/centos/$releasever/$basearch/" target="_blank" rel="noopener">http://nginx.org/packages/centos/$releasever/$basearch/</a><br>gpgcheck=1<br>enabled=1<br>gpgkey=<a href="https://nginx.org/keys/nginx_signing.key" target="_blank" rel="noopener">https://nginx.org/keys/nginx_signing.key</a></li>
+</ol>
+<p>[nginx-mainline]<br>name=nginx mainline repo<br>baseurl=<a href="http://nginx.org/packages/mainline/centos/$releasever/$basearch/" target="_blank" rel="noopener">http://nginx.org/packages/mainline/centos/$releasever/$basearch/</a><br>gpgcheck=1<br>enabled=0<br>gpgkey=<a href="https://nginx.org/keys/nginx_signing.keyutil" target="_blank" rel="noopener">https://nginx.org/keys/nginx_signing.keyutil</a></p>
+<p>yum install yum-utils<br>yum install nginx</p>
+<p>nginx的配置文件<br>/etc/nginx/nginx.conf</p>
+<p>user  nginx;   #运行用户，默认为nginx<br>worker_processes  1;     #nginx的进程数</p>
+<p>error_log  /var/log/nginx/error.log warn;  #错误日志存放的位置<br>pid        /var/run/nginx.pid;  #进程pid存放的位置</p>
+<p>events {<br>    worker_connections  1024;   #单个后台进程的最大并发连接数<br>}</p>
+<p>http {<br>    include       /etc/nginx/mime.types;  #文件扩展名与类型映射表<br>    default_type  application/octet-stream;   #默认文件类型</p>
+<pre><code>log_format  main  &apos;$remote_addr - $remote_user [$time_local] &quot;$request&quot; &apos;
+                  &apos;$status $body_bytes_sent &quot;$http_referer&quot; &apos;
+                  &apos;&quot;$http_user_agent&quot; &quot;$http_x_forwarded_for&quot;&apos;;
+
+access_log  /var/log/nginx/access.log  main;  #nginx的访问日志
+
+sendfile        on;     #开启高效传输模式
+#tcp_nopush     on;
+
+keepalive_timeout  65;  #连接超时时间，单位秒
+
+#gzip  on;   #开启gzip压缩功能
+
+include /etc/nginx/conf.d/*.conf;</code></pre><p>}</p>
+<p>server {<br>    listen       80;   #监听端口<br>    server_name  localhost;</p>
+<pre><code>#charset koi8-r;
+#access_log  /var/log/nginx/host.access.log  main;
+
+location / {
+    root   /usr/share/nginx/html;   首页的目录
+    index  index.html index.htm;  首页排序
+}
+
+#error_page  404              /404.html;
+
+# redirect server error pages to the static page /50x.html
+#
+error_page   500 502 503 504  /50x.html;
+location = /50x.html {
+    root   /usr/share/nginx/html;
+}
+
+# proxy the PHP scripts to Apache listening on 127.0.0.1:80
+#
+#location ~ \.php$ {
+#    proxy_pass   http://127.0.0.1;
+#}
+
+# pass the PHP scripts to FastCGI server listening on 127.0.0.1:9000
+#
+#location ~ \.php$ {
+#    root           html;
+#    fastcgi_pass   127.0.0.1:9000;
+#    fastcgi_index  index.php;
+#    fastcgi_param  SCRIPT_FILENAME  /scripts$fastcgi_script_name;
+#    include        fastcgi_params;
+#}
+
+# deny access to .htaccess files, if Apache&apos;s document root
+# concurs with nginx&apos;s one
+#
+#location ~ /\.ht {
+#    deny  all;
+#}</code></pre><p>}</p>
+<p>nginx反向代理</p>
+<p>upstream  mytomcat {<br>server 192.168.1.120:8080;<br>}</p>
+<p>location / {<br>proxy_pass <a href="http://mytomocat" target="_blank" rel="noopener">http://mytomocat</a>;<br>proxy_pass_header Server;<br>proxy_set_header Host $host;<br>proxy_set_header X-Real-IP $remote_addr;<br>proxy_set_header X-Forward-For  $proxy_add_x_forwarded_for;<br>}</p>
+<p>nginx负载均衡</p>
+<p>1.轮询（RR）<br>upstream mytomcat {<br>server 192.168.1.120:8080;<br>server 192.168.1.121:8080;<br>}<br>2.权重<br>upstream mytomcat {<br>server 192.168.1.120:8080 weight=1;<br>server 192.168.1.121:8080 weight=2;<br>}<br>3.ip_hash（将同一个IP访问同一个服务器）<br>upstream mytomcat {<br>       ip_hash；<br>server 192.168.1.120:8080;<br>server 192.168.1.121:8080;<br>}<br>4.fair（按后端服务器的响应时间来分配请求）<br>upstream mytomcat {<br>server 192.168.1.120:8080;<br>server 192.168.1.121:8080;<br>fair;<br>}<br>5.url_hash<br>upstream backserver {<br>    server squid1:3128;<br>    server squid2:3128;<br>    hash $request_uri;<br>    hash_method crc32;<br>}</p>
+<p>在server中添加</p>
+<p>location / {<br>root   /usr/share/nginx/html;<br>index index.html index.htm;<br>proxy_pass <a href="http://mytomcat" target="_blank" rel="noopener">http://mytomcat</a>;<br>}</p>
+<p>nginx的日志格式</p>
+<pre><code>log_format  main  &apos;$remote_addr -  [$time_local] &quot;$remote_user$request&quot; &apos;
+                  &apos;$status $body_bytes_sent &quot;$http_referer&quot; &apos;
+                  &apos;&quot;$http_user_agent&quot; &quot;$http_x_forwarded_for&quot;&apos;;</code></pre><p>192.168.1.49 - - [20/Feb/2019:06:01:42 -0500] “GET / HTTP/1.1” 304 0 “-“ “Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.109 Safari/537.36”</p>
+<p>参数明细表<br>$remote_addr 客户端ip(代理服务器，显示代理服务ip)<br>$remote_user 用于记录远程客户端的用户名称（一般为”-“）<br>$time_local 用于记录访问时间和时区<br>$request 用于记录请求的url以及请求方法<br>$status 响应状态码，例如：200，404等<br>$boby_bytes_sent 给客户端发送的文件主体内容节数<br>$http_user_agent 用户所使用的代理（一般为浏览器）<br>$http_x_forwarded_for 可以记录客户端IP，通过代理服务器来记录客户端的IP地址<br>$http_referer 可以记录用户是从哪个链接访问过来的<br>$request_time 整个请求的时间</p>
+
+      
+    </div>
+    
+  </div>
+  
+  
+</article>
+
+  
+    <article id="title-dockerfile参数" class="article global-container article-type-title" itemscope itemprop="blogPost">
+  
+    <header class="article-header">
+      
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2021/03/21/dockerfile参数/">dockerfile参数</a>
+    </h1>
+  
+
+    </header>
+  
+  <div class="article-meta">
+    <a href="/2021/03/21/dockerfile参数/" class="article-date">
+  <time datetime="2021-03-21T11:37:36.000Z" itemprop="datePublished">2021-03-21</time>
+</a>
+    
+    
+  </div>
+  
+
+  <div class="article-inner">
+    
+    <div class="article-content article-content-cloud" itemprop="articleBody">
+      
+        <h6 id="FROM"><a href="#FROM" class="headerlink" title="FROM"></a>FROM</h6><p>FROM <reposity>[:<tag>]<br>FROM <reposity>@<digest></digest></reposity></tag></reposity></p>
+<h6 id="MAINTAINER"><a href="#MAINTAINER" class="headerlink" title="MAINTAINER"></a>MAINTAINER</h6><p>用于让Dockerfile制作者提供详细信息<br>MAINTAINER &lt;author’s dentail&gt;</p>
+<h6 id="LABLE"><a href="#LABLE" class="headerlink" title="LABLE"></a>LABLE</h6><p>LABLE <key>=<value> <key>=<value> <key>=<value>…</value></key></value></key></value></key></p>
+<h6 id="COPY"><a href="#COPY" class="headerlink" title="COPY"></a>COPY</h6><p>用于从Docker主机复制文件至创建的新映像文件<br>COPY <src> … <dest><br>COPY [“<src>“ … “<dest>“]<br><src>:要复制的源文件或目录，支持使用通配符<br><dest>：目标路径，即正在创建的image的文件路径；建议为<dest>使用绝对路径，否则，COPY指定则以WORKDIR为起始路径</dest></dest></src></dest></src></dest></src></p>
+<h6 id="ADD"><a href="#ADD" class="headerlink" title="ADD"></a>ADD</h6><p>类似于COPY指令，支持使用TAR文件和URL文件</p>
+<h6 id="WORKDIR"><a href="#WORKDIR" class="headerlink" title="WORKDIR"></a>WORKDIR</h6><p>用来指定工作目录</p>
+<h6 id="VOLUME"><a href="#VOLUME" class="headerlink" title="VOLUME"></a>VOLUME</h6><p>用来在images中创建一个挂载点目录，以挂载Docker host上的卷和其他容器上的卷<br>VOLUME <mountpoint>或<br>VOLUME [“<mountpoint>“]<br>如果挂载点目录路径下此前在文件存在，docker run后会自动挂载</mountpoint></mountpoint></p>
+<h6 id="EXPOSE"><a href="#EXPOSE" class="headerlink" title="EXPOSE"></a>EXPOSE</h6><p>用于为容器打开指定要监听的端口以实现与外部通信<br>EXPOSE <port>[/<protocol>] [<port> [/<protocol>] …]</protocol></port></protocol></port></p>
+<p>######ENV<br>用于为镜像定义所需的环境变量，并可被Dockerfile文件中位于其后面的其它指令(如ENV ADD COPY)所调用。<br>调用格式为$variable_name或${variable_name}<br>ENV <key> <value> 仅能设置一个变量<br>或 ENV <key>=<value>…如果value中含空格，可以用\进行转义。</value></key></value></key></p>
+<h6 id="RUN"><a href="#RUN" class="headerlink" title="RUN"></a>RUN</h6><p>用于执行docker build过程中运行的命令</p>
+<h6 id="CMD"><a href="#CMD" class="headerlink" title="CMD"></a>CMD</h6><p>指定镜像启动后如果没有指定命令，默认运行的命令</p>
+<p>CMD <command><br>CMD [“<executable>“,”<param1>“,”<param2>“]<br>CMD [“<param1>“,”<param2>“]</param2></param1></param2></param1></executable></p>
+
+      
+    </div>
+    
+  </div>
+  
+  
+</article>
+
+  
+    <article id="title-mysql基础知识学习" class="article global-container article-type-title" itemscope itemprop="blogPost">
+  
+    <header class="article-header">
+      
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2021/03/21/mysql基础知识学习/">mysql基础知识学习</a>
+    </h1>
+  
+
+    </header>
+  
+  <div class="article-meta">
+    <a href="/2021/03/21/mysql基础知识学习/" class="article-date">
+  <time datetime="2021-03-21T11:34:54.000Z" itemprop="datePublished">2021-03-21</time>
+</a>
+    
+    
+  </div>
+  
+
+  <div class="article-inner">
+    
+    <div class="article-content article-content-cloud" itemprop="articleBody">
+      
+        <h4 id="用通配符进行过滤"><a href="#用通配符进行过滤" class="headerlink" title="用通配符进行过滤"></a>用通配符进行过滤</h4><ol>
+<li>LIKE操作符  <blockquote>
+<p>通配符：用来匹配值的一部分的特殊字符<br>搜索模式：由字面值、通配符或两者组合构成的搜索条件：  </p>
+<ul>
+<li>百分号通配符，%表示任何字符出现的任意次数  </li>
+<li>下划线通配符，_表示任意单个字符<br>例如：</li>
+</ul>
+</blockquote>
+</li>
+</ol>
+<pre><code>SELECT prod_id,prod_name FROM products WHERE prod_name LIKE &apos;jet%&apos;</code></pre><h4 id="用正规表达式进行搜索"><a href="#用正规表达式进行搜索" class="headerlink" title="用正规表达式进行搜索"></a>用正规表达式进行搜索</h4><ol>
+<li>基本字符匹配<br>例如：检索prod_name包含文本1000的所有行</li>
+</ol>
+<pre><code>SELECT prod_name FROM products WHERE prod_name REGEXP &apos;1000&apos; ORDER BY prod_name</code></pre><ol start="2">
+<li>.是正则表达式语言中的一个特殊的字符，表示匹配任意一个字符</li>
+<li>进行or匹配，为搜索两个串之一，使用|</li>
+<li>匹配几个字符之一[],例如[123]即在1，2，3中匹配任意一个，且[123]为[1|2|3]的缩写，也可以使用后者</li>
+<li>字符集合也可以被否定，例如：[^123]</li>
+<li>匹配范围:[1-9],[a-z],[A-Z]</li>
+<li>匹配特殊字符，需要用\为前导，进行转义。</li>
+<li>匹配类字符  </li>
+</ol>
+<table>
+<thead>
+<tr>
+<th align="center">字符</th>
+<th align="center">含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">[:alnum:]</td>
+<td align="center">任何字母和数字</td>
+</tr>
+<tr>
+<td align="center">[:alpha:]</td>
+<td align="center">任何字符</td>
+</tr>
+<tr>
+<td align="center">[:blank:]</td>
+<td align="center">空格或制表符</td>
+</tr>
+<tr>
+<td align="center">[:cntrl:]</td>
+<td align="center">ASCII控制字符</td>
+</tr>
+<tr>
+<td align="center">[:digit:]</td>
+<td align="center">任意数字</td>
+</tr>
+<tr>
+<td align="center">[:graph:]</td>
+<td align="center">任意可打印字符，但不包括空格</td>
+</tr>
+<tr>
+<td align="center">[:lower:]</td>
+<td align="center">任意小写字母</td>
+</tr>
+<tr>
+<td align="center">[:print:]</td>
+<td align="center">任意可打印字符</td>
+</tr>
+<tr>
+<td align="center">[:upper:]</td>
+<td align="center">任意大写字母</td>
+</tr>
+<tr>
+<td align="center">[:xdigit:]</td>
+<td align="center">任意十六进制数字</td>
+</tr>
+</tbody></table>
+<ol start="9">
+<li>匹配多个实例</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th align="center">字符</th>
+<th align="center">含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">*</td>
+<td align="center">0个或多个匹配</td>
+</tr>
+<tr>
+<td align="center">+</td>
+<td align="center">1个或多个匹配</td>
+</tr>
+<tr>
+<td align="center">?</td>
+<td align="center">0个或1个匹配</td>
+</tr>
+<tr>
+<td align="center">{n}</td>
+<td align="center">指定数量的匹配</td>
+</tr>
+<tr>
+<td align="center">{n,}</td>
+<td align="center">不少于指定数量的匹配</td>
+</tr>
+<tr>
+<td align="center">{n,m}</td>
+<td align="center">匹配数目的范围</td>
+</tr>
+<tr>
+<td align="center">10. 定位符</td>
+<td align="center"></td>
+</tr>
+</tbody></table>
+<table>
+<thead>
+<tr>
+<th align="center">字符</th>
+<th align="center">含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">^</td>
+<td align="center">文本的开始</td>
+</tr>
+<tr>
+<td align="center">$</td>
+<td align="center">文本的结尾</td>
+</tr>
+<tr>
+<td align="center">[[:&lt;:]]</td>
+<td align="center">词的开始</td>
+</tr>
+<tr>
+<td align="center">[[:&gt;:]]</td>
+<td align="center">词的结尾</td>
+</tr>
+<tr>
+<td align="center">#### 创建计算字段</td>
+<td align="center"></td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>字段：基本与列（column）的意思相同，经常互换使用。<br>拼接字段</p>
+<ul>
+<li>Concat()拼接串，即把多个串连接起来形成一个较长的串。Concat()需要一个或多个指定的串，各个串之间用逗号分隔。例如：<br><img src="http://ww1.sinaimg.cn/large/006VBoWSly1fxoygvndmqj30ze0cswg6.jpg" alt></li>
+<li>RTrim()函数去掉串右边的所有空格。LTrim()函数去掉串左边的空格以及Trim()去掉串两边的空格<br>使用别名，使用关键字AS赋值<br>执行算术计算。例如：</li>
+</ul>
+</blockquote>
+<pre><code>SELECT prod_id,quantity,item_price,quantity*item_price AS expanded_price FROM orderitems WHERE order_num = 20005</code></pre><table>
+<thead>
+<tr>
+<th align="center">操作符</th>
+<th align="center">说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">+</td>
+<td align="center">加</td>
+</tr>
+<tr>
+<td align="center">-</td>
+<td align="center">减</td>
+</tr>
+<tr>
+<td align="center">*</td>
+<td align="center">乘</td>
+</tr>
+<tr>
+<td align="center">/</td>
+<td align="center">除</td>
+</tr>
+</tbody></table>
+<h4 id="使用数据处理函数"><a href="#使用数据处理函数" class="headerlink" title="使用数据处理函数"></a>使用数据处理函数</h4><p>大多数的SQL实现支持以下类型的函数</p>
+<ul>
+<li>用于处理文本串（如删除或填充值，转换值为大写或小写）的文本函数</li>
+<li>用于在数值上进行算术操作</li>
+<li>用于处理日期和时间值并从这些值中提取特定成分（例如，返回两个日期之差，检查日期有效性等）的日期和时间函数</li>
+<li>返回DBMS正使用的特殊信息（如返回用户登录信息，检查版本细节）的函数系统<h6 id="文本处理函数"><a href="#文本处理函数" class="headerlink" title="文本处理函数"></a>文本处理函数</h6></li>
+</ul>
+<table>
+<thead>
+<tr>
+<th align="center">函数</th>
+<th align="center">说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">Left()</td>
+<td align="center">返回串左边的字符</td>
+</tr>
+<tr>
+<td align="center">Length()</td>
+<td align="center">返回串的长度</td>
+</tr>
+<tr>
+<td align="center">Locate()</td>
+<td align="center">找出串的一个子串</td>
+</tr>
+<tr>
+<td align="center">Lower()</td>
+<td align="center">将串转换为小写</td>
+</tr>
+<tr>
+<td align="center">LTrim()</td>
+<td align="center">去掉串左边的空格</td>
+</tr>
+<tr>
+<td align="center">Right()</td>
+<td align="center">返回串右边的字符</td>
+</tr>
+<tr>
+<td align="center">RTrim()</td>
+<td align="center">去掉串右边的空格</td>
+</tr>
+<tr>
+<td align="center">Soundex()</td>
+<td align="center">返回串的SOUNDEX值</td>
+</tr>
+<tr>
+<td align="center">SubString()</td>
+<td align="center">返回子串的字符</td>
+</tr>
+<tr>
+<td align="center">Upper()</td>
+<td align="center">将串转换为大写</td>
+</tr>
+<tr>
+<td align="center">###### 日期和时间处理函数</td>
+<td align="center"></td>
+</tr>
+</tbody></table>
+<table>
+<thead>
+<tr>
+<th align="center">函数</th>
+<th align="center">说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">AddDate()</td>
+<td align="center">增加一个日期（天、周等）</td>
+</tr>
+<tr>
+<td align="center">AddTime()</td>
+<td align="center">增加一个时间（时、分等）</td>
+</tr>
+<tr>
+<td align="center">CurDate()</td>
+<td align="center">返回当前日期</td>
+</tr>
+<tr>
+<td align="center">CurTime()</td>
+<td align="center">返回当前时间</td>
+</tr>
+<tr>
+<td align="center">Date()</td>
+<td align="center">返回日期时间的日期部分</td>
+</tr>
+<tr>
+<td align="center">DateDiff()</td>
+<td align="center">计算两个日期之差</td>
+</tr>
+<tr>
+<td align="center">Date_Add()</td>
+<td align="center">高度灵活的日期运算函数</td>
+</tr>
+<tr>
+<td align="center">Date_Format()</td>
+<td align="center">返回一个格式化的日期或时间串</td>
+</tr>
+<tr>
+<td align="center">Day()</td>
+<td align="center">返回一个日期的天数部分</td>
+</tr>
+<tr>
+<td align="center">###### 数值处理函数</td>
+<td align="center"></td>
+</tr>
+</tbody></table>
+<table>
+<thead>
+<tr>
+<th align="center">函数</th>
+<th align="center">说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">Abs()</td>
+<td align="center">返回一个数的绝对值</td>
+</tr>
+<tr>
+<td align="center">Cos()</td>
+<td align="center">返回一个角度的余弦</td>
+</tr>
+<tr>
+<td align="center">Exp()</td>
+<td align="center">返回一个数的指数值</td>
+</tr>
+<tr>
+<td align="center">Mod()</td>
+<td align="center">返回除操作的余数</td>
+</tr>
+<tr>
+<td align="center">Pi()</td>
+<td align="center">返回圆周率</td>
+</tr>
+<tr>
+<td align="center">Rand()</td>
+<td align="center">返回一个随机数</td>
+</tr>
+<tr>
+<td align="center">Sin()</td>
+<td align="center">返回一个角度的正弦</td>
+</tr>
+<tr>
+<td align="center">Sqrt()</td>
+<td align="center">返回一个数的平方根</td>
+</tr>
+<tr>
+<td align="center">Tan()</td>
+<td align="center">返回一个角度的正切</td>
+</tr>
+<tr>
+<td align="center">#### 聚集函数</td>
+<td align="center"></td>
+</tr>
+</tbody></table>
+<table>
+<thead>
+<tr>
+<th align="center">函数</th>
+<th align="center">说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">AVG()</td>
+<td align="center">返回某列的平均值</td>
+</tr>
+<tr>
+<td align="center">COUNT()</td>
+<td align="center">返回某列的行数</td>
+</tr>
+<tr>
+<td align="center">MAX()</td>
+<td align="center">返回某列的最大值</td>
+</tr>
+<tr>
+<td align="center">MIN()</td>
+<td align="center">返回某列的最小值</td>
+</tr>
+<tr>
+<td align="center">SUM()</td>
+<td align="center">返回某列值之和</td>
+</tr>
+<tr>
+<td align="center">#### 分组数据</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">1. GROUP BY</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">例如：</td>
+<td align="center"></td>
+</tr>
+</tbody></table>
+<pre><code>SELECT vend_id,COUNT(*) AS num_prods FROM products GROUP BY vend_id;</code></pre><ol start="2">
+<li>HAVING,过滤分组<br>例如：</li>
+</ol>
+<pre><code>SELECT cust_id,COUNT(*) AS orders FROM orders GROUP BY cust_id HAVING COUNT(*) &gt;= 2</code></pre><ol start="3">
+<li>分组和排序</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th align="center">ORDER BY</th>
+<th align="center">GROUP BY</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">排序产生的输出</td>
+<td align="center">分组行。但输出可能不是分组的顺序</td>
+</tr>
+<tr>
+<td align="center">任何列都可以使用（甚至非选择的列也可以使用）</td>
+<td align="center">只可能使用选择列或表达式列，而且必须使用每个选择列表达式</td>
+</tr>
+<tr>
+<td align="center">不一定需要</td>
+<td align="center">如果与聚集函数一起使用列（或表达式），则必须使用</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>将分组进行排序，可以结果ORDER BY,例如：</p>
+</blockquote>
+<p><img src="http://ww1.sinaimg.cn/large/006VBoWSly1fxor7o36qyj30ze09ugn0.jpg" alt></p>
+<h4 id="使用子查询"><a href="#使用子查询" class="headerlink" title="使用子查询"></a>使用子查询</h4><blockquote>
+<p>查询：任何SQL语句都是查询，但此术语一般指SELECT语句<br>子查询：嵌套在其他查询中的查询。<br>例如：<br><img src="http://ww1.sinaimg.cn/large/006VBoWSly1fxoyy9nxiwj30zi08mjs9.jpg" alt></p>
+</blockquote>
+<h6 id="作为计算字段使用子查询"><a href="#作为计算字段使用子查询" class="headerlink" title="作为计算字段使用子查询"></a>作为计算字段使用子查询</h6><p>例如：<br><img src="http://ww1.sinaimg.cn/large/006VBoWSly1fxoz10km1tj31uw0as404.jpg" alt></p>
+<blockquote>
+<p>相关子查询:涉及外部查询的子查询。</p>
+</blockquote>
+<h4 id="联结表"><a href="#联结表" class="headerlink" title="联结表"></a>联结表</h4><h6 id="创建联结"><a href="#创建联结" class="headerlink" title="创建联结"></a>创建联结</h6><p>例如：<br><img src="http://ww1.sinaimg.cn/large/006VBoWSly1fxp04w68uxj30zk0j8dj0.jpg" alt></p>
+<h6 id="WHERE子句的重要性"><a href="#WHERE子句的重要性" class="headerlink" title="WHERE子句的重要性"></a>WHERE子句的重要性</h6><blockquote>
+<p>WHERE子句作为过滤条件，它只包含那些匹配给定条件（这里是联结条件）的行，没有WHERE子句，第一个表中的每个行与第二个表中的每个行配对，而不管它们逻辑上是否可以配在一起</p>
+</blockquote>
+<h6 id="笛卡尔积"><a href="#笛卡尔积" class="headerlink" title="笛卡尔积"></a>笛卡尔积</h6><blockquote>
+<p>由没有联结条件的表关系返回的结果为笛卡尔积。检索出的行的数目将是第一个表中的行数乘以第二个表中的行数。</p>
+</blockquote>
+<h6 id="内部联结"><a href="#内部联结" class="headerlink" title="内部联结"></a>内部联结</h6><blockquote>
+<p>基于两个表之间的相等测试，称为等值联结，也称为内部联结，可以用稍微不同的语法来明确指定联结的类型（INNER JOIN ON)<br>例如：<br><img src="http://ww1.sinaimg.cn/large/006VBoWSly1fxp1urxzzhj30za0jgq66.jpg" alt></p>
+</blockquote>
+<h6 id="联结多个表"><a href="#联结多个表" class="headerlink" title="联结多个表"></a>联结多个表</h6><blockquote>
+<p>首先列出所有表，然后定义表之间的关系。<br>例如：<br><img src="http://ww1.sinaimg.cn/large/006VBoWSly1fxp24meb6lj31080bgac0.jpg" alt></p>
+</blockquote>
+<h4 id="创建高级联结"><a href="#创建高级联结" class="headerlink" title="创建高级联结"></a>创建高级联结</h4><h6 id="自联结"><a href="#自联结" class="headerlink" title="自联结"></a>自联结</h6><blockquote>
+<p>在单条SELECT语句中不止一次引用相同的表。<br><img src="http://ww1.sinaimg.cn/large/006VBoWSly1fxpw3l5fc5j30vg0dgjt0.jpg" alt><br>采用自联结的相同查询<br><img src="http://ww1.sinaimg.cn/large/006VBoWSly1fxpwbezdg7j30va0d4wg2.jpg" alt></p>
+</blockquote>
+<h6 id="自然联结"><a href="#自然联结" class="headerlink" title="自然联结"></a>自然联结</h6><blockquote>
+<p>自然联结排除列多次出现，使每个列只返回一次。<br><img src="http://ww1.sinaimg.cn/large/006VBoWSly1fxpx3zd7ofj31z20eo0vg.jpg" alt></p>
+</blockquote>
+<h6 id="外部联结"><a href="#外部联结" class="headerlink" title="外部联结"></a>外部联结</h6><blockquote>
+<p>许多联结将一个表中的行与另一个表中的行进行相关联。但有时候会需要没有关联的行。联结包含了那些在相关表中没有关联行的行。这种类型的联结称为外部联结。<br><img src="http://ww1.sinaimg.cn/large/006VBoWSly1fxpykf3u00j30vk0oqju4.jpg" alt></p>
+</blockquote>
+<h6 id="使用带聚集函数的联结"><a href="#使用带聚集函数的联结" class="headerlink" title="使用带聚集函数的联结"></a>使用带聚集函数的联结</h6><p><img src="http://ww1.sinaimg.cn/large/006VBoWSly1fxq2wujqctj30xy0d676o.jpg" alt></p>
+<h4 id="组合查询"><a href="#组合查询" class="headerlink" title="组合查询"></a>组合查询</h4><blockquote>
+<p>在单个查询中从不同的表返回类似结构的数据<br>对单个表执行多个查询，按单个查询返回数据</p>
+</blockquote>
+<h6 id="使用UNION"><a href="#使用UNION" class="headerlink" title="使用UNION"></a>使用UNION</h6><blockquote>
+<p>UNION用法很简单，所需做的只是给出每条SELECT语句，在各条语句之间放上关键字UNION</p>
+</blockquote>
+<h4 id="全文本搜索"><a href="#全文本搜索" class="headerlink" title="全文本搜索"></a>全文本搜索</h4><blockquote>
+<p>在索引之后，使用两个函数Match()和Aginst()执行全文本搜索，其中Match()指定被搜索的列，Against()指定要使用的搜索表达式。<br><img src="http://ww1.sinaimg.cn/large/006VBoWSly1fxq4whljijj30xe0dwmys.jpg" alt></p>
+</blockquote>
+<h4 id="插入数据"><a href="#插入数据" class="headerlink" title="插入数据"></a>插入数据</h4><blockquote>
+<p>INSERT是用来插入（或添加）行到数据库，插入可以用几种方式使用：<br>插入完整行<br>插入行的一部分<br>插入多行<br>插入某些查询的结果</p>
+</blockquote>
+<h4 id="更新和删除数据"><a href="#更新和删除数据" class="headerlink" title="更新和删除数据"></a>更新和删除数据</h4><blockquote>
+<p>使用UPDATE语句，可采用两种方式UPDATE<br>更新表中特定行<br>更新表中所有行</p>
+</blockquote>
+<h6 id="更新表中特定行"><a href="#更新表中特定行" class="headerlink" title="更新表中特定行"></a>更新表中特定行</h6><p><img src="http://ww1.sinaimg.cn/large/006VBoWSly1fxts55n473j30hw05w0ss.jpg" alt><br>为了删除某个列的值，可设置它为NULL.</p>
+<h4 id="删除数据"><a href="#删除数据" class="headerlink" title="删除数据"></a>删除数据</h4><blockquote>
+<p>为了从一个表中删除（去掉）数据，使用DELETE语句<br>从表中删除特定的行<br>从表中删除所有行。</p>
+</blockquote>
+<pre><code>    MariaDB [system]&gt; DELETE FROM customers WHERE cust_id = 10006;
+Query OK, 0 rows affected (0.07 sec)</code></pre><blockquote>
+<p>如果想从表中删除所有行，不要使用DELETE，可使用TRUNCATE TABLE语句。</p>
+</blockquote>
+<h4 id="创建表和操纵表"><a href="#创建表和操纵表" class="headerlink" title="创建表和操纵表"></a>创建表和操纵表</h4><blockquote>
+<p>引擎类型：</p>
+<ul>
+<li>InnoDB是一个可靠的事务处理引擎，它不支持全文本搜索。  </li>
+<li>MEMORY在功能上等同于MyTSAM，但由于数据存储在内存中，速度很快（特别适合于临时表）  </li>
+<li>MyISAM是一个性能极高的引擎，它支持全文本搜索，但不支持事务处理。  </li>
+<li>外键不能跨引擎*，即使用一个引擎的表不能引用具有使用不同引擎表的外键。</li>
+</ul>
+</blockquote>
+<h6 id="更新表"><a href="#更新表" class="headerlink" title="更新表"></a>更新表</h6><blockquote>
+<p>为了更新表定义，可以使用ALTER TABLE语句。</p>
+</blockquote>
+<pre><code>    MariaDB [system]&gt; ALTER TABLE vendors ADD vend_phone CHAR(20);
+Query OK, 6 rows affected (0.27 sec)               
+Records: 6  Duplicates: 0  Warnings: 0
+
+
+    MariaDB [system]&gt;  ALTER TABLE vendors DROP COLUMN vend_phone;
+Query OK, 6 rows affected (0.07 sec)               
+Records: 6  Duplicates: 0  Warnings: 0</code></pre><h6 id="查看表"><a href="#查看表" class="headerlink" title="查看表"></a>查看表</h6><p><img src="http://ww1.sinaimg.cn/large/006VBoWSly1fxtu2mofexj30dl050a9x.jpg" alt></p>
+<h6 id="显示表列"><a href="#显示表列" class="headerlink" title="显示表列"></a>显示表列</h6><p><img src="http://ww1.sinaimg.cn/large/006VBoWSly1fxtu4lmnhpj30f8058t8s.jpg" alt></p>
+<h6 id="删除表"><a href="#删除表" class="headerlink" title="删除表"></a>删除表</h6><pre><code>DROP TABLE customers；</code></pre><h6 id="重命名表"><a href="#重命名表" class="headerlink" title="重命名表"></a>重命名表</h6><pre><code>RENAME TABLE customers TO customers2;</code></pre><h4 id="视图"><a href="#视图" class="headerlink" title="视图"></a>视图</h4><blockquote>
+<p>视图是虚拟的表。与包含数据的表不一样，视图只包含使用时动态检索数据的查询</p>
+</blockquote>
+<h6 id="视图的常见应用"><a href="#视图的常见应用" class="headerlink" title="视图的常见应用"></a>视图的常见应用</h6><blockquote>
+<ul>
+<li>重用SQL语句  </li>
+<li>简化复杂的SQL操作。在编写查询后，可以方便地重用它而不必知道它的基本查询细节。  </li>
+<li>使用表的组成部分而不是整个表  </li>
+<li>保护数据。可以给用户授予表的特定访问权限而不是整个表的访问权限  </li>
+<li>更改数据格式和表示。视图可返回与底层表的表示和格式不同的数据</li>
+</ul>
+</blockquote>
+<p><em>性能问题：因为视图不包含数据，所以每次使用视图时，都必须处理查询执行时所需的任一个检索。如果你用多个联结和过滤创建了复杂的视图或者嵌套了视图，可能会发现性能下降得很厉害。因此，在部署使用大量视图的应用前，应该进行测试。</em></p>
+<h6 id="视图的规则和限制"><a href="#视图的规则和限制" class="headerlink" title="视图的规则和限制"></a>视图的规则和限制</h6><blockquote>
+<ul>
+<li>视图必须唯一命名</li>
+<li>对于可以创建的视图数目没有限制</li>
+<li>为了创建视图，必须具有足够的访问权限。这些限制通常由数据库管理人员授予</li>
+<li>视图可以嵌套，即可以利用从其他视图中检索的数据查询来构造一个视图。</li>
+<li>ORDER BY可以用在视图中，但如果从该视图检索数据SELECT也含有ORDER BY,那么该视图中的ORDER BY将被覆盖。</li>
+<li>视图不能索引，也不能有关联的触发器或默认值</li>
+<li>视图可以与表一起使用。</li>
+</ul>
+</blockquote>
+<h6 id="使用视图"><a href="#使用视图" class="headerlink" title="使用视图"></a>使用视图</h6><blockquote>
+<ul>
+<li>视图用CREATE VIEW AS语句来创建</li>
+<li>使用SHOW CREATE VIEW viewname; 来查看创建视图的语句</li>
+<li>用DROP删除视图，其语法为DROP VIEW viewname;</li>
+<li>更新视图时，可以先用DROP再用CREATE，也可以直接用CREATE OR REPLACE VIEW。</li>
+</ul>
+</blockquote>
+<h4 id="使用存储过程"><a href="#使用存储过程" class="headerlink" title="使用存储过程"></a>使用存储过程</h4><h6 id="创建存储过程"><a href="#创建存储过程" class="headerlink" title="创建存储过程"></a>创建存储过程</h6><p><img src="http://ww1.sinaimg.cn/large/006VBoWSly1fy0jpi5z68j30b003bjr9.jpg" alt>  </p>
+<p><em>注意：mysql命令行客户机的分隔符，默认的MySQL语句的分隔符为；。如果命令行实用程序要解释存储过程自身内的；字符，则它们最终不会成为存储过程的成分，这会使存储过程中的SQL出现句法错误</em></p>
+<h6 id="执行存储过程"><a href="#执行存储过程" class="headerlink" title="执行存储过程"></a>执行存储过程</h6><p><img src="http://ww1.sinaimg.cn/large/006VBoWSly1fy0kzdj6zoj308q03ra9w.jpg" alt></p>
+<h6 id="删除存储过程"><a href="#删除存储过程" class="headerlink" title="删除存储过程"></a>删除存储过程</h6><pre><code>    MariaDB [system]&gt; DROP PROCEDURE productpricing;
+Query OK, 0 rows affected (0.00 sec)</code></pre><h6 id="使用参数"><a href="#使用参数" class="headerlink" title="使用参数"></a>使用参数</h6><blockquote>
+<p>变量：内存中一个特定的位置，用来临时存储数据。  </p>
+</blockquote>
+<blockquote>
+<p>使用参数创建存储过程</p>
+</blockquote>
+<p><img src="http://ww1.sinaimg.cn/large/006VBoWSly1fy0mdqo1u9j30bp07swei.jpg" alt></p>
+<blockquote>
+<p>调用并输出变量值</p>
+</blockquote>
+<p><img src="http://ww1.sinaimg.cn/large/006VBoWSly1fy0meqjm38j30fx08ct8r.jpg" alt>  </p>
+<blockquote>
+<p>使用IN和OUT参数</p>
+</blockquote>
+<p><img src="http://ww1.sinaimg.cn/large/006VBoWSly1fy0n8qe91ej30aw05kt8n.jpg" alt></p>
+<blockquote>
+<p>调用并输出变量值  </p>
+</blockquote>
+<p><img src="http://ww1.sinaimg.cn/large/006VBoWSly1fy0n8qe91ej30aw05kt8n.jpg" alt></p>
+<h4 id="安全管理"><a href="#安全管理" class="headerlink" title="安全管理"></a>安全管理</h4><blockquote>
+<p>创建用户账号</p>
+</blockquote>
+<pre><code>create user ben identified by &apos;12345&apos;;</code></pre><blockquote>
+<p>重命名用户</p>
+</blockquote>
+<pre><code>rename user ben to bforta;</code></pre><blockquote>
+<p>删除用户账号</p>
+</blockquote>
+<pre><code>drop user bforta;</code></pre><blockquote>
+<p>设置访问权限</p>
+</blockquote>
+<pre><code>grant &lt;权限&gt; on &lt;数据库和表&gt; to &lt;用户&gt; identified by &apos;PASSWORD&apos;
+
+revoke &lt;权限&gt; on &lt;数据库和表&gt; from &lt;用户&gt;</code></pre><blockquote>
+<p>更改用户口令</p>
+</blockquote>
+<pre><code>set password for bforts = Password(&apos;new password&apos;)
+
+set password = Password(&apos;new password&apos;) #不指定用户时，更新当前登陆用户的口令</code></pre><h4 id="数据库维护"><a href="#数据库维护" class="headerlink" title="数据库维护"></a>数据库维护</h4><blockquote>
+<p>数据库备份  </p>
+<ol>
+<li>使用命令行实用程序mysqldump转储所有数据库内容到某个外部文件  </li>
+<li>使用命令行实用程序mysqlhotcopy从一个数据库复制所有数据</li>
+<li>BACKUP TABLE 或 SELECT INTO OUTFILE转储所有数据到外部文件。</li>
+</ol>
+</blockquote>
+<blockquote>
+</blockquote>
+
+      
+    </div>
+    
+  </div>
+  
+  
+</article>
+
+  
     <article id="title-linux系统用户账号管理" class="article global-container article-type-title" itemscope itemprop="blogPost">
   
     <header class="article-header">
@@ -251,55 +1431,12 @@ chan:x:1000:chan
 </article>
 
   
-    <article id="post-hello-world" class="article global-container article-type-post" itemscope itemprop="blogPost">
-  
-    <header class="article-header">
-      
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/07/19/hello-world/">Hello World</a>
-    </h1>
-  
 
-    </header>
-  
-  <div class="article-meta">
-    <a href="/2019/07/19/hello-world/" class="article-date">
-  <time datetime="2019-07-19T10:32:11.353Z" itemprop="datePublished">2019-07-19</time>
-</a>
+
+  <nav id="page-nav">
     
-    
-  </div>
-  
-
-  <div class="article-inner">
-    
-    <div class="article-content article-content-cloud" itemprop="articleBody">
-      
-        <p>Welcome to <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/" target="_blank" rel="noopener">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html" target="_blank" rel="noopener">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues" target="_blank" rel="noopener">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><div class="highlight-box"autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" contenteditable="true"data-rel="BASH"><figure class="iseeu highlight /bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">"My New Post"</span></span><br></pre></td></tr></table></figure></div>
-
-<p>More info: <a href="https://hexo.io/docs/writing.html" target="_blank" rel="noopener">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><div class="highlight-box"autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" contenteditable="true"data-rel="BASH"><figure class="iseeu highlight /bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure></div>
-
-<p>More info: <a href="https://hexo.io/docs/server.html" target="_blank" rel="noopener">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><div class="highlight-box"autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" contenteditable="true"data-rel="BASH"><figure class="iseeu highlight /bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure></div>
-
-<p>More info: <a href="https://hexo.io/docs/generating.html" target="_blank" rel="noopener">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><div class="highlight-box"autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" contenteditable="true"data-rel="BASH"><figure class="iseeu highlight /bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure></div>
-
-<p>More info: <a href="https://hexo.io/docs/deployment.html" target="_blank" rel="noopener">Deployment</a></p>
-
-      
-    </div>
-    
-  </div>
-  
-  
-</article>
-
-  
-
+    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="extend next" rel="next" href="/page/2/">Next &raquo;</a>
+  </nav>
 
 
 </section>
@@ -345,15 +1482,23 @@ chan:x:1000:chan
       <ul>
         
           <li>
-            <a href="/2021/03/21/linux系统用户账号管理/">linux系统用户账号管理</a>
+            <a href="/2021/03/21/RabbitMQ/">RabbitMQ</a>
           </li>
         
           <li>
-            <a href="/2019/07/19/test/">test</a>
+            <a href="/2021/03/21/常见问题记录/">常见问题记录</a>
           </li>
         
           <li>
-            <a href="/2019/07/19/hello-world/">Hello World</a>
+            <a href="/2021/03/21/iptables参数详解/">iptables参数详解</a>
+          </li>
+        
+          <li>
+            <a href="/2021/03/21/DNS域名解析详解/">DNS域名解析详解</a>
+          </li>
+        
+          <li>
+            <a href="/2021/03/21/docker-compose详解/">docker-compose详解</a>
           </li>
         
       </ul>

@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+
+  
+  <title>DNS域名解析详解 | haochan&#39;s blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  
+  
+  <meta name="keywords" content="blog">
+  
+  <meta name="description" content="一次完整的查询的查询请求经过的流程client –&amp;gt;hosts文件 –&amp;gt;DNS Service         local  cache –&amp;gt; DNS server(recursion) –&amp;gt; server cache –&amp;gt; iteration（迭代）–&amp;gt;         解析答案                 肯定答案：                 否定">
+<meta name="keywords" content="blog">
+<meta property="og:type" content="article">
+<meta property="og:title" content="DNS域名解析详解">
+<meta property="og:url" content="https://haochanc.github.io/2021/03/21/DNS域名解析详解/index.html">
+<meta property="og:site_name" content="haochan&#39;s blog">
+<meta property="og:description" content="一次完整的查询的查询请求经过的流程client –&amp;gt;hosts文件 –&amp;gt;DNS Service         local  cache –&amp;gt; DNS server(recursion) –&amp;gt; server cache –&amp;gt; iteration（迭代）–&amp;gt;         解析答案                 肯定答案：                 否定">
+<meta property="og:locale" content="Chinese">
+<meta property="og:updated_time" content="2021-03-21T11:46:33.281Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="DNS域名解析详解">
+<meta name="twitter:description" content="一次完整的查询的查询请求经过的流程client –&amp;gt;hosts文件 –&amp;gt;DNS Service         local  cache –&amp;gt; DNS server(recursion) –&amp;gt; server cache –&amp;gt; iteration（迭代）–&amp;gt;         解析答案                 肯定答案：                 否定">
+  
+    <link rel="alternate" href="/atom.xml" title="haochan&#39;s blog" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/images/kk.jpg">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/highlight.css">
+  <script>
+  let antiquityStorage = window.sessionStorage.getItem('antiquitySessionStorage');
+  if (antiquityStorage == '' || antiquityStorage == null) {
+    var antiquityLoader = '<div id="loaderbox"><div class="loader"><div class="load-roll"><div class="load-top"></div><div class="load-right"></div><div class="load-bottom"></div></div></div></div>';
+    document.write(antiquityLoader);
+    document.body.style.overflow = 'hidden'
+  }
+  </script>
+</head>
+</html>
+<body>
+  <div id="fullpage" class="mobile-nav-right">
+    
+      <div id="wrapper" style="background-image: url(/images/mm.jpeg)" title="图片来自网络">
+    
+    
+      <header id="header">
+  <div id="nav-toggle" class="nav-toggle"></div>
+  <div class="head-box global-width">
+    <nav class="nav-box nav-right">
+      
+        <a class="nav-item" href="/" title
+        
+        >首页</a>
+      
+        <a class="nav-item" href="/archives" title
+        
+        >归档</a>
+      
+    </nav>
+  </div>
+</header>
+      <div id="middlecontent" title class="global-width sidebar-right">
+        <section id="main"><article id="title-DNS域名解析详解" class="article global-container article-type-title" itemscope itemprop="blogPost">
+  
+    <header class="article-header">
+      
+  
+    <h1 class="article-title" itemprop="name">
+      DNS域名解析详解
+    </h1>
+  
+
+    </header>
+  
+  <div class="article-meta">
+    <a href="/2021/03/21/DNS域名解析详解/" class="article-date">
+  <time datetime="2021-03-21T11:45:56.000Z" itemprop="datePublished">2021-03-21</time>
+</a>
+    
+    
+  </div>
+  
+    <span id="busuanzi_container_page_pv">
+      本文总阅读量<span id="busuanzi_value_page_pv"></span>次
+    </span>
+  
+
+  <div class="article-inner">
+    
+    <div class="article-content article-content-cloud" itemprop="articleBody">
+      
+        <p>一次完整的查询的查询请求经过的流程<br>client –&gt;hosts文件 –&gt;DNS Service<br>         local  cache –&gt; DNS server(recursion) –&gt; server cache –&gt; iteration（迭代）–&gt;<br>         解析答案<br>                 肯定答案：<br>                 否定答案：请求的条目不存在等原因导致无法返回结果<br>                 权威答案：<br>                 非权威答案：<br>区域解析库：由众多RR组成<br>        资源记录类型：A AA PTR SOA NS CNAME MX<br>        SOA：start of authority:起始授权记录：一个区域解析库有且仅有一个SOA记录，而必须为解析库的第一条记录；<br>        A：internet address .  作用：FQDN –&gt; IP<br>        AAAA:FQDN –&gt;IPv6<br>        PTR: pionter. IP –&gt;FQDN<br>        NS : name server:专用于表明当前区域的DNS服务器<br>       CNAME ：别名记录<br>       MX：mai exchange 邮件交换器</p>
+<p>资源记录定义的格式：<br>       语法： name  [TTL]    IN        rr_type    value</p>
+<pre><code>  注意：
+         （1）TTL可从全局继承
+         （2）@可用于引用当前区域的名字
+         （3）同一个名字可以通过多条记录定义多个不同的值，此时DNS会以轮询方式响应
+         （4）同一个值也可以有多个不同的定义名字，通过多个不同的名字指向同一个值，仅表示通过不同的名字，可以找到同一个主机。
+  SOA:
+           name:当前区域的名字
+           value:有多部分组成
+                     （1）当前区域的主DNS服务器的FQDN，也可以使用当前区域的名字
+                     （2）目前区域的邮箱地址，但地址不能使用@符号，一般用.代替
+                     （3）主从服务协调属性的定义以及否定的答案的统一的TTL
+           例如：
+           magedu.com.   86400   IN   SOA   ns.magedu.com.   nsadmin.magedu.com.  (
+                                     2015042201      ;序列号
+                                     2H                         ;刷新时长
+                                     10M                       ;重试时间
+                                     1w                          ;过期时间
+                                     1D                          ;否定答案的TTL值
+           ）
+  NS:
+           name：当前区域的名字
+           value：当前区域的某DNS服务器的名字，例如：ns.magedu.com.
+                    注意：一个区域可以有多条NS记录
+           例如：
+           magedu.com.           IN        NS          ns1.magedu.com.
+           magedu.com            IN        NS          ns2.magedu.com.
+           注意：
+                 （1）相邻的两个资源记录的name相同时，后续的可省略
+                 （2）对NS记录而言，任何一个ns记录后面的服务器名字，都应该在后续有一个A记录
+  MX：
+           name:当前区域的名字
+           value:当前区域的某邮件服务器（smtp服务器）的主机名
+                     一个区域内，MX记录可有多个，但每个记录的value之前都应该有一个数字（0-99），表示此服务器的优先级，数字越小，优先级越高
+           例如：
+           magedu.com.     IN          MX       10       mx1.megedu.com.
+           注意：
+               （1）对MX记录而言，任何一个MX记录后面的服务器名字，都应该在后续有个A 记录
+  A:
+           name：某主机的FQDN
+           value：主机名对应主机的IP地址
+          例如：
+                  www.magedu.com.    IN     A    1.1.1.1
+                  www.magedu.com.    IN     A    1.1.1.2
+         注意：
+                  *.magedu.com.    IN     A    1.1.1.4
+                   magedu.com.     IN     A .   1.1.1..4
+                  避免用户写错名称时，可通过泛域名进行解析到某特定地址
+PTR:
+         name:IP，有特定格式，把IP地址反过来写，1.2.3.4 要写作4.3.2.1，而有特定后缀：in-addr.arpa.,所以完整写法为：4.3.2.1.in-addr.arpa.
+         value:FQDN
+         例如：
+                 4.3.2.1.in-addr.arpa.   IN     PTR    www.baidu.com</code></pre><p>   CNAME:<br>             name:别名的FQDN<br>             value:正名的FQDN<br>             例如：<br>                     web.magedu.com    IN      CNAME      <a href="http://www.magedu.com" target="_blank" rel="noopener">www.magedu.com</a></p>
+
+      
+    </div>
+    
+      <footer class="article-footer">
+        完
+      </footer>
+    
+  </div>
+  
+    
+<nav id="article-nav">
+  <div class="article-nav-block">
+    
+      <a href="/2021/03/21/iptables参数详解/" id="article-nav-newer" class="article-nav-link-wrap">
+        <strong class="article-nav-caption"></strong>
+        <div class="article-nav-title">
+          
+            iptables参数详解
+          
+        </div>
+      </a>
+    
+  </div>
+  <div class="article-nav-block">
+    
+      <a href="/2021/03/21/docker-compose详解/" id="article-nav-older" class="article-nav-link-wrap">
+        <div class="article-nav-title">docker-compose详解</div>
+        <strong class="article-nav-caption"></strong>
+      </a>
+    
+  </div>
+</nav>
+
+    
+<div id="gitmentContainer"></div>
+<link rel="stylesheet" href="https://imsun.github.io/gitment/style/default.css">
+<script src="https://imsun.github.io/gitment/dist/gitment.browser.js"></script>
+<script>
+var gitment = new Gitment({
+  owner: 'haochanc',
+  repo: 'haochanc.github.io',
+  oauth: {
+    client_id: 'ece3337c08ff6f853acc',
+    client_secret: '892b8fe3400f057ab9eb1f01f7983e9bd70426bc',
+  },
+})
+gitment.render('gitmentContainer')
+</script>
+
+
+  
+  
+</article>
+</section>
+        <aside id="sidebar">
+  
+    <div class="widget-box">
+  <div class="avatar-box">
+    <img class="avatar" src="/images/tx.jpeg" title="头像来自网络"></img>
+    <h3 class="avatar-name">
+      
+        好馋
+      
+    </h3>
+    <p class="avatar-slogan">
+      爱折腾的程序员
+    </p>
+  </div>
+</div>
+
+
+  
+    
+
+  
+    
+
+  
+    
+  
+    
+  <div class="widget-box">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/03/">March 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/07/">July 2019</a></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-box">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2021/03/21/RabbitMQ/">RabbitMQ</a>
+          </li>
+        
+          <li>
+            <a href="/2021/03/21/常见问题记录/">常见问题记录</a>
+          </li>
+        
+          <li>
+            <a href="/2021/03/21/iptables参数详解/">iptables参数详解</a>
+          </li>
+        
+          <li>
+            <a href="/2021/03/21/DNS域名解析详解/">DNS域名解析详解</a>
+          </li>
+        
+          <li>
+            <a href="/2021/03/21/docker-compose详解/">docker-compose详解</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+      <div class="widget-box">
+    <h3 class="widget-title">友链</h3>
+    <div class="widget">
+      
+        <a style="display: block;" href="https://github.com/haochanc/" title target='_blank'
+        >爱吃的小馋猫</a>
+      
+    </div>
+  </div>
+
+  
+</aside>
+      </div>
+      <footer id="footer">
+  <div class="foot-box global-width">
+    &copy; 2021 Chan Hao &nbsp;&nbsp;
+    Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    &nbsp;|&nbsp;主题 <a href="https://github.com/yiluyanxia/hexo-theme-antiquity">antiquity</a>
+    <br>
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  </div>
+
+      <script src="https://code.jquery.com/jquery-2.0.3.min.js"></script>
+<script>
+if (!window.jQuery) {
+var script = document.createElement('script');
+script.src = "/js/jquery-2.0.3.min.js";
+document.body.write(script);
+}
+</script>
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+
+
+    </div>
+    <nav id="mobile-nav" class="mobile-nav-box">
+  <div class="mobile-nav-img mobile-nav-top"></div>
+  
+    <a href="/" class="mobile-nav-link">首页</a>
+  
+    <a href="/archives" class="mobile-nav-link">归档</a>
+  
+  <div class="mobile-nav-img  mobile-nav-bottom"></div>
+</nav>    
+  </div>
+</body>
+</html>

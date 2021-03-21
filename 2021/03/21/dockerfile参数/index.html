@@ -5,25 +5,25 @@
   
 
   
-  <title>test | haochan&#39;s blog</title>
+  <title>dockerfile参数 | haochan&#39;s blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   
   
   
   <meta name="keywords" content="blog">
   
-  <meta name="description" content="This is a test page!hello world! I LOVE YOU!">
+  <meta name="description" content="FROMFROM [:]FROM @ MAINTAINER用于让Dockerfile制作者提供详细信息MAINTAINER &amp;lt;author’s dentail&amp;gt; LABLELABLE = = =… COPY用于从Docker主机复制文件至创建的新映像文件COPY  … COPY [““ … ““]:要复制的源文件或目录，支持使用通配符：目标路径，即正在创建的image的文件路径；建议为">
 <meta name="keywords" content="blog">
 <meta property="og:type" content="article">
-<meta property="og:title" content="test">
-<meta property="og:url" content="https://haochanc.github.io/2019/07/19/test/index.html">
+<meta property="og:title" content="dockerfile参数">
+<meta property="og:url" content="https://haochanc.github.io/2021/03/21/dockerfile参数/index.html">
 <meta property="og:site_name" content="haochan&#39;s blog">
-<meta property="og:description" content="This is a test page!hello world! I LOVE YOU!">
+<meta property="og:description" content="FROMFROM [:]FROM @ MAINTAINER用于让Dockerfile制作者提供详细信息MAINTAINER &amp;lt;author’s dentail&amp;gt; LABLELABLE = = =… COPY用于从Docker主机复制文件至创建的新映像文件COPY  … COPY [““ … ““]:要复制的源文件或目录，支持使用通配符：目标路径，即正在创建的image的文件路径；建议为">
 <meta property="og:locale" content="Chinese">
-<meta property="og:updated_time" content="2019-07-19T14:00:44.231Z">
+<meta property="og:updated_time" content="2021-03-21T11:39:33.014Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="test">
-<meta name="twitter:description" content="This is a test page!hello world! I LOVE YOU!">
+<meta name="twitter:title" content="dockerfile参数">
+<meta name="twitter:description" content="FROMFROM [:]FROM @ MAINTAINER用于让Dockerfile制作者提供详细信息MAINTAINER &amp;lt;author’s dentail&amp;gt; LABLELABLE = = =… COPY用于从Docker主机复制文件至创建的新映像文件COPY  … COPY [““ … ““]:要复制的源文件或目录，支持使用通配符：目标路径，即正在创建的image的文件路径；建议为">
   
     <link rel="alternate" href="/atom.xml" title="haochan&#39;s blog" type="application/atom+xml">
   
@@ -68,21 +68,21 @@
   </div>
 </header>
       <div id="middlecontent" title class="global-width sidebar-right">
-        <section id="main"><article id="post-test" class="article global-container article-type-post" itemscope itemprop="blogPost">
+        <section id="main"><article id="title-dockerfile参数" class="article global-container article-type-title" itemscope itemprop="blogPost">
   
     <header class="article-header">
       
   
     <h1 class="article-title" itemprop="name">
-      test
+      dockerfile参数
     </h1>
   
 
     </header>
   
   <div class="article-meta">
-    <a href="/2019/07/19/test/" class="article-date">
-  <time datetime="2019-07-19T13:57:30.000Z" itemprop="datePublished">2019-07-19</time>
+    <a href="/2021/03/21/dockerfile参数/" class="article-date">
+  <time datetime="2021-03-21T11:37:36.000Z" itemprop="datePublished">2021-03-21</time>
 </a>
     
     
@@ -97,9 +97,18 @@
     
     <div class="article-content article-content-cloud" itemprop="articleBody">
       
-        <h3 id="This-is-a-test-page"><a href="#This-is-a-test-page" class="headerlink" title="This is a test page!"></a>This is a test page!</h3><h6 id="hello-world"><a href="#hello-world" class="headerlink" title="hello world!"></a>hello world!</h6><blockquote>
-<p>I LOVE YOU!</p>
-</blockquote>
+        <h6 id="FROM"><a href="#FROM" class="headerlink" title="FROM"></a>FROM</h6><p>FROM <reposity>[:<tag>]<br>FROM <reposity>@<digest></digest></reposity></tag></reposity></p>
+<h6 id="MAINTAINER"><a href="#MAINTAINER" class="headerlink" title="MAINTAINER"></a>MAINTAINER</h6><p>用于让Dockerfile制作者提供详细信息<br>MAINTAINER &lt;author’s dentail&gt;</p>
+<h6 id="LABLE"><a href="#LABLE" class="headerlink" title="LABLE"></a>LABLE</h6><p>LABLE <key>=<value> <key>=<value> <key>=<value>…</value></key></value></key></value></key></p>
+<h6 id="COPY"><a href="#COPY" class="headerlink" title="COPY"></a>COPY</h6><p>用于从Docker主机复制文件至创建的新映像文件<br>COPY <src> … <dest><br>COPY [“<src>“ … “<dest>“]<br><src>:要复制的源文件或目录，支持使用通配符<br><dest>：目标路径，即正在创建的image的文件路径；建议为<dest>使用绝对路径，否则，COPY指定则以WORKDIR为起始路径</dest></dest></src></dest></src></dest></src></p>
+<h6 id="ADD"><a href="#ADD" class="headerlink" title="ADD"></a>ADD</h6><p>类似于COPY指令，支持使用TAR文件和URL文件</p>
+<h6 id="WORKDIR"><a href="#WORKDIR" class="headerlink" title="WORKDIR"></a>WORKDIR</h6><p>用来指定工作目录</p>
+<h6 id="VOLUME"><a href="#VOLUME" class="headerlink" title="VOLUME"></a>VOLUME</h6><p>用来在images中创建一个挂载点目录，以挂载Docker host上的卷和其他容器上的卷<br>VOLUME <mountpoint>或<br>VOLUME [“<mountpoint>“]<br>如果挂载点目录路径下此前在文件存在，docker run后会自动挂载</mountpoint></mountpoint></p>
+<h6 id="EXPOSE"><a href="#EXPOSE" class="headerlink" title="EXPOSE"></a>EXPOSE</h6><p>用于为容器打开指定要监听的端口以实现与外部通信<br>EXPOSE <port>[/<protocol>] [<port> [/<protocol>] …]</protocol></port></protocol></port></p>
+<p>######ENV<br>用于为镜像定义所需的环境变量，并可被Dockerfile文件中位于其后面的其它指令(如ENV ADD COPY)所调用。<br>调用格式为$variable_name或${variable_name}<br>ENV <key> <value> 仅能设置一个变量<br>或 ENV <key>=<value>…如果value中含空格，可以用\进行转义。</value></key></value></key></p>
+<h6 id="RUN"><a href="#RUN" class="headerlink" title="RUN"></a>RUN</h6><p>用于执行docker build过程中运行的命令</p>
+<h6 id="CMD"><a href="#CMD" class="headerlink" title="CMD"></a>CMD</h6><p>指定镜像启动后如果没有指定命令，默认运行的命令</p>
+<p>CMD <command><br>CMD [“<executable>“,”<param1>“,”<param2>“]<br>CMD [“<param1>“,”<param2>“]</param2></param1></param2></param1></executable></p>
 
       
     </div>
@@ -114,11 +123,11 @@
 <nav id="article-nav">
   <div class="article-nav-block">
     
-      <a href="/2021/03/21/linux系统用户账号管理/" id="article-nav-newer" class="article-nav-link-wrap">
+      <a href="/2021/03/21/nginx安装与配置/" id="article-nav-newer" class="article-nav-link-wrap">
         <strong class="article-nav-caption"></strong>
         <div class="article-nav-title">
           
-            linux系统用户账号管理
+            nginx安装与配置
           
         </div>
       </a>
@@ -126,8 +135,8 @@
   </div>
   <div class="article-nav-block">
     
-      <a href="/2019/07/19/hello-world/" id="article-nav-older" class="article-nav-link-wrap">
-        <div class="article-nav-title">Hello World</div>
+      <a href="/2021/03/21/mysql基础知识学习/" id="article-nav-older" class="article-nav-link-wrap">
+        <div class="article-nav-title">mysql基础知识学习</div>
         <strong class="article-nav-caption"></strong>
       </a>
     

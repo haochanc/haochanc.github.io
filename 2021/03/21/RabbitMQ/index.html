@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+
+  
+  <title>RabbitMQ | haochan&#39;s blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  
+  
+  <meta name="keywords" content="blog">
+  
+  <meta name="description" content="简介AMQP，即Advanced Message Queuing Protocal,高级消息队列协议，是应用层协议的一个开放标准，为面对消息的中间件设计。消息中间件主要用于组件之间的解藕。RabbitMQ是一个开源的AMQP实现，用于在分布式系统中存储转发消息。 ConnectionFactory、Connection、Channel connectionfactory为connection的制造">
+<meta name="keywords" content="blog">
+<meta property="og:type" content="article">
+<meta property="og:title" content="RabbitMQ">
+<meta property="og:url" content="https://haochanc.github.io/2021/03/21/RabbitMQ/index.html">
+<meta property="og:site_name" content="haochan&#39;s blog">
+<meta property="og:description" content="简介AMQP，即Advanced Message Queuing Protocal,高级消息队列协议，是应用层协议的一个开放标准，为面对消息的中间件设计。消息中间件主要用于组件之间的解藕。RabbitMQ是一个开源的AMQP实现，用于在分布式系统中存储转发消息。 ConnectionFactory、Connection、Channel connectionfactory为connection的制造">
+<meta property="og:locale" content="Chinese">
+<meta property="og:updated_time" content="2021-03-21T11:52:34.794Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="RabbitMQ">
+<meta name="twitter:description" content="简介AMQP，即Advanced Message Queuing Protocal,高级消息队列协议，是应用层协议的一个开放标准，为面对消息的中间件设计。消息中间件主要用于组件之间的解藕。RabbitMQ是一个开源的AMQP实现，用于在分布式系统中存储转发消息。 ConnectionFactory、Connection、Channel connectionfactory为connection的制造">
+  
+    <link rel="alternate" href="/atom.xml" title="haochan&#39;s blog" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/images/kk.jpg">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/highlight.css">
+  <script>
+  let antiquityStorage = window.sessionStorage.getItem('antiquitySessionStorage');
+  if (antiquityStorage == '' || antiquityStorage == null) {
+    var antiquityLoader = '<div id="loaderbox"><div class="loader"><div class="load-roll"><div class="load-top"></div><div class="load-right"></div><div class="load-bottom"></div></div></div></div>';
+    document.write(antiquityLoader);
+    document.body.style.overflow = 'hidden'
+  }
+  </script>
+</head>
+</html>
+<body>
+  <div id="fullpage" class="mobile-nav-right">
+    
+      <div id="wrapper" style="background-image: url(/images/mm.jpeg)" title="图片来自网络">
+    
+    
+      <header id="header">
+  <div id="nav-toggle" class="nav-toggle"></div>
+  <div class="head-box global-width">
+    <nav class="nav-box nav-right">
+      
+        <a class="nav-item" href="/" title
+        
+        >首页</a>
+      
+        <a class="nav-item" href="/archives" title
+        
+        >归档</a>
+      
+    </nav>
+  </div>
+</header>
+      <div id="middlecontent" title class="global-width sidebar-right">
+        <section id="main"><article id="title-RabbitMQ" class="article global-container article-type-title" itemscope itemprop="blogPost">
+  
+    <header class="article-header">
+      
+  
+    <h1 class="article-title" itemprop="name">
+      RabbitMQ
+    </h1>
+  
+
+    </header>
+  
+  <div class="article-meta">
+    <a href="/2021/03/21/RabbitMQ/" class="article-date">
+  <time datetime="2021-03-21T11:52:07.000Z" itemprop="datePublished">2021-03-21</time>
+</a>
+    
+    
+  </div>
+  
+    <span id="busuanzi_container_page_pv">
+      本文总阅读量<span id="busuanzi_value_page_pv"></span>次
+    </span>
+  
+
+  <div class="article-inner">
+    
+    <div class="article-content article-content-cloud" itemprop="articleBody">
+      
+        <h5 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h5><p>AMQP，即Advanced Message Queuing Protocal,高级消息队列协议，是应用层协议的一个开放标准，为面对消息的中间件设计。消息中间件主要用于组件之间的解藕。RabbitMQ是一个开源的AMQP实现，用于在分布式系统中存储转发消息。</p>
+<h6 id="ConnectionFactory、Connection、Channel"><a href="#ConnectionFactory、Connection、Channel" class="headerlink" title="ConnectionFactory、Connection、Channel"></a>ConnectionFactory、Connection、Channel</h6><ul>
+<li>connectionfactory为connection的制造工厂</li>
+<li>connection是rabbitMQ的socket链接，它封装了socket协议相关部分逻辑</li>
+<li>channel是我们与RabbitMQ打交道的最重要的一个接口，我们大部分的业务操作是在channel这个接口中完成，包括定义Quenue、定义Exchange、绑定Queue与Exchage、发布消息等。</li>
+</ul>
+<h6 id="Queue"><a href="#Queue" class="headerlink" title="Queue"></a>Queue</h6><ul>
+<li>Queue(队列)是RabbitMQ的内部对象，用于存储信息</li>
+<li>RabbitMQ的消息都只能存储在Queue中，生产者(p)生产消息并最终投递到Queue中，消费者(c)可以从queue中获取消息并消费</li>
+<li>多个消费者可以订阅同一个Queue,这时Queue中的消息会被平均分摊给多个消费者进行处理，而不是每个消费者收到所有消息并处理</li>
+</ul>
+<h6 id="消息确认"><a href="#消息确认" class="headerlink" title="消息确认"></a>消息确认</h6><ul>
+<li>在实际应用中，可能会发生消费者收到queue中的消息，但没有处理完就宕机，这种情况就可能会导致信息的丢失，为了避免这种情况发生，我们可以要求消费者在消费完消息后发送一个回执给RabbitMQ，RabbitMQ收到消息回执后才能将消息从Queue中移除</li>
+<li>如果RabbitMQ没有收到回执并检测到消费者的RabbitMQ连接断开，则RabbitMQ会将消息发送给其他消费者进行处理。</li>
+</ul>
+<h6 id="消息持久化"><a href="#消息持久化" class="headerlink" title="消息持久化"></a>消息持久化</h6><ul>
+<li>如果我们希望即使在RabbitMQ服务重启的情况下，也不会丢失消息，我们可以将Queue与Message都设置为可持久化(durable)</li>
+</ul>
+<h6 id="Prefetch-count-预取数量"><a href="#Prefetch-count-预取数量" class="headerlink" title="Prefetch count(预取数量)"></a>Prefetch count(预取数量)</h6><ul>
+<li>如果有多个消费者同时订阅同一个Queue中的消息，Queue中的消息会被平摊给多个消费者，这时如果每个消息的处理时间不同，就有可能导致某些消费者一直在忙，而另一些消费者很快处理完手头工作处于空闲情况</li>
+<li>我们可以通过设置prefetchCount来限制queue每次发送给每个消费者的消息数。</li>
+</ul>
+<h6 id="Exchange-交换器"><a href="#Exchange-交换器" class="headerlink" title="Exchange(交换器)"></a>Exchange(交换器)</h6><ul>
+<li>生产者将消息发送到Exchage(交换器)，由Exchage将消息路由到一个或多个Queue中</li>
+</ul>
+<h6 id="routing-key-路由值"><a href="#routing-key-路由值" class="headerlink" title="routing key(路由值)"></a>routing key(路由值)</h6><ul>
+<li>生产者将消息发送到Exchage的时候，一般会指定一个routing key,来指定这个消息的路由规则，而这个routing key需要与Exchage Type及binding key联合使用才能生效，routing key设定的长度限制为255bytes</li>
+</ul>
+<h6 id="binding-绑定"><a href="#binding-绑定" class="headerlink" title="binding(绑定)"></a>binding(绑定)</h6><ul>
+<li>rabbitMQ中通过Binding将Exchage与Queue关联起来，这样RabbitMQ就知道如何正确地将消息路由到指定的queue了。</li>
+</ul>
+<h6 id="binding-key"><a href="#binding-key" class="headerlink" title="binding key"></a>binding key</h6><ul>
+<li>在绑定Exchage与Queue的同时，一般会指定一个binding key;消费者将消息发送给exchange时，一般会指定一个routing key;当binding key与routing key相匹配时，消息将会被路由到对应的queue中。</li>
+</ul>
+<h6 id="exchage-types"><a href="#exchage-types" class="headerlink" title="exchage types"></a>exchage types</h6><ul>
+<li>RabbitMQ常用的Exchage Type有fanout、direct、topic、headers这四种</li>
+<li>fanout：将所有发送到该exchage的消息路由到所有与它绑定的Queue中。</li>
+<li>direct:把消息路由到那些binding key与routing key完全匹配的queue中</li>
+<li>topic：范围匹配,binding key中可以存在两种特殊字符”*“与”#”用于模糊匹配，其中”*“用于匹配一个单词，”#”用于匹配零个或多个单词。</li>
+<li>headers:根据发送的消息内容中的header属性进行匹配。</li>
+</ul>
+<h6 id="RPC-远程过程调用"><a href="#RPC-远程过程调用" class="headerlink" title="RPC(远程过程调用)"></a>RPC(远程过程调用)</h6><p>RabbitMQ中实现RPC的机制：</p>
+<ul>
+<li>客户端发送请求（消息）时，在消息属性中设置两个值replyTo(用于告诉服务器处理完成后将通知我的消息发送到这个queue中)和correlation(此次请求的标识号，服务器处理完成后需要将此属性返还，客户端将根据这个id了解哪条请求被成功执行了或者执行失败)</li>
+<li>服务器端收到消息并处理</li>
+<li>服务器端处理完消息后，将生成一条应答消息到replyTo指定的queue，同时带上correlationld属性</li>
+<li>客户端之前订阅replyTo指定的Queue,从中收到服务器的应答消息后，根据其中的correlation属性分析哪条请求被执行了</li>
+</ul>
+<h5 id="rabbitmq集群搭建"><a href="#rabbitmq集群搭建" class="headerlink" title="rabbitmq集群搭建"></a>rabbitmq集群搭建</h5><ol>
+<li>安装rabbitmq</li>
+</ol>
+<pre><code>yum install rabbitmq-server</code></pre><p>2.启动服务</p>
+<pre><code>systemctl start rabbitmq-server
+rabbitmq-server -detached(此方法可用，但偶尔出错)</code></pre><ol start="3">
+<li>查看服务状态</li>
+</ol>
+<pre><code>rabbitmqctl status
+systemctl status rabbitmq-server(建议)</code></pre><p>4.配置网页插件</p>
+<pre><code>rabbotmq-plugins enable rabbit_management</code></pre><p>5.配置web账号密码（默认账号密码为guest guest）</p>
+<pre><code>rabbitmqctl add_user rabbitmq rabbitrmq //添加用户，后面两个参数分别为用户名和密码
+rabbitmqctl set_pemissions -p / rabbitmq &quot;.*&quot; &quot;.*&quot; &quot;.*&quot; //添加权限，具体参数查看该命令帮助
+rabbitmqctl set_user_tags rabbitmq administrator //修改用户角色</code></pre>
+      
+    </div>
+    
+      <footer class="article-footer">
+        完
+      </footer>
+    
+  </div>
+  
+    
+<nav id="article-nav">
+  <div class="article-nav-block">
+    
+  </div>
+  <div class="article-nav-block">
+    
+      <a href="/2021/03/21/常见问题记录/" id="article-nav-older" class="article-nav-link-wrap">
+        <div class="article-nav-title">常见问题记录</div>
+        <strong class="article-nav-caption"></strong>
+      </a>
+    
+  </div>
+</nav>
+
+    
+<div id="gitmentContainer"></div>
+<link rel="stylesheet" href="https://imsun.github.io/gitment/style/default.css">
+<script src="https://imsun.github.io/gitment/dist/gitment.browser.js"></script>
+<script>
+var gitment = new Gitment({
+  owner: 'haochanc',
+  repo: 'haochanc.github.io',
+  oauth: {
+    client_id: 'ece3337c08ff6f853acc',
+    client_secret: '892b8fe3400f057ab9eb1f01f7983e9bd70426bc',
+  },
+})
+gitment.render('gitmentContainer')
+</script>
+
+
+  
+  
+</article>
+</section>
+        <aside id="sidebar">
+  
+    <div class="widget-box">
+  <div class="avatar-box">
+    <img class="avatar" src="/images/tx.jpeg" title="头像来自网络"></img>
+    <h3 class="avatar-name">
+      
+        好馋
+      
+    </h3>
+    <p class="avatar-slogan">
+      爱折腾的程序员
+    </p>
+  </div>
+</div>
+
+
+  
+    
+
+  
+    
+
+  
+    
+  
+    
+  <div class="widget-box">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/03/">March 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/07/">July 2019</a></li></ul>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-box">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2021/03/21/RabbitMQ/">RabbitMQ</a>
+          </li>
+        
+          <li>
+            <a href="/2021/03/21/常见问题记录/">常见问题记录</a>
+          </li>
+        
+          <li>
+            <a href="/2021/03/21/iptables参数详解/">iptables参数详解</a>
+          </li>
+        
+          <li>
+            <a href="/2021/03/21/DNS域名解析详解/">DNS域名解析详解</a>
+          </li>
+        
+          <li>
+            <a href="/2021/03/21/docker-compose详解/">docker-compose详解</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+      <div class="widget-box">
+    <h3 class="widget-title">友链</h3>
+    <div class="widget">
+      
+        <a style="display: block;" href="https://github.com/haochanc/" title target='_blank'
+        >爱吃的小馋猫</a>
+      
+    </div>
+  </div>
+
+  
+</aside>
+      </div>
+      <footer id="footer">
+  <div class="foot-box global-width">
+    &copy; 2021 Chan Hao &nbsp;&nbsp;
+    Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    &nbsp;|&nbsp;主题 <a href="https://github.com/yiluyanxia/hexo-theme-antiquity">antiquity</a>
+    <br>
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  </div>
+
+      <script src="https://code.jquery.com/jquery-2.0.3.min.js"></script>
+<script>
+if (!window.jQuery) {
+var script = document.createElement('script');
+script.src = "/js/jquery-2.0.3.min.js";
+document.body.write(script);
+}
+</script>
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+
+
+    </div>
+    <nav id="mobile-nav" class="mobile-nav-box">
+  <div class="mobile-nav-img mobile-nav-top"></div>
+  
+    <a href="/" class="mobile-nav-link">首页</a>
+  
+    <a href="/archives" class="mobile-nav-link">归档</a>
+  
+  <div class="mobile-nav-img  mobile-nav-bottom"></div>
+</nav>    
+  </div>
+</body>
+</html>
